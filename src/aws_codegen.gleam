@@ -23,14 +23,42 @@ pub type Reference {
 }
 
 // pub type Shape {
-//   Shape(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
+//   Shape(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
 //   /// Simple
-//   Blob(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   Boolean(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   String(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   Byte(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   Short(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   Integer(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
+//   Blob(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   Boolean(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   String(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   Byte(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   Short(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   Integer(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
 //   IntEnum(
 //     type_: String,
 //     traits: Option(Dict(String, String)),
@@ -43,13 +71,41 @@ pub type Reference {
 //     mixins: List(Reference),
 //     members: Dict(String, Member),
 //   )
-//   Long(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   Float(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   Double(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   BigInteger(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   BigDecimal(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   Timestamp(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
-//   Document(type_: String, traits: Option(Dict(String, String)), mixins: List(Reference))
+//   Long(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   Float(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   Double(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   BigInteger(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   BigDecimal(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   Timestamp(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
+//   Document(
+//     type_: String,
+//     traits: Option(Dict(String, String)),
+//     mixins: List(Reference),
+//   )
 
 //   /// Aggregate
 //   ListShape(
