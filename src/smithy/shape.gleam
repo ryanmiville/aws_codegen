@@ -68,7 +68,7 @@ pub type Shape {
   )
 }
 
-pub fn reference_decoder() -> Decoder(Reference) {
+fn reference() -> Decoder(Reference) {
   decode.into({
     use target <- decode.parameter
     Reference(target)
@@ -216,9 +216,9 @@ fn service() {
     Service(version, operations, resources, errors, traits)
   })
   |> decode.field("version", decode.string)
-  |> decode.field("operations", optional_list(reference_decoder()))
-  |> decode.field("resources", optional_list(reference_decoder()))
-  |> decode.field("errors", optional_list(reference_decoder()))
+  |> decode.field("operations", optional_list(reference()))
+  |> decode.field("resources", optional_list(reference()))
+  |> decode.field("errors", optional_list(reference()))
   |> decode.field("traits", traits())
 }
 
@@ -251,23 +251,17 @@ fn resource() {
       traits,
     )
   })
-  |> decode.field(
-    "identifiers",
-    optional_dict(decode.string, reference_decoder()),
-  )
-  |> decode.field(
-    "properties",
-    optional_dict(decode.string, reference_decoder()),
-  )
-  |> decode.field("create", reference_decoder())
-  |> decode.field("put", reference_decoder())
-  |> decode.field("read", reference_decoder())
-  |> decode.field("update", reference_decoder())
-  |> decode.field("delete", reference_decoder())
-  |> decode.field("list", reference_decoder())
-  |> decode.field("operations", optional_list(reference_decoder()))
-  |> decode.field("collection_operations", optional_list(reference_decoder()))
-  |> decode.field("resources", optional_list(reference_decoder()))
+  |> decode.field("identifiers", optional_dict(decode.string, reference()))
+  |> decode.field("properties", optional_dict(decode.string, reference()))
+  |> decode.field("create", reference())
+  |> decode.field("put", reference())
+  |> decode.field("read", reference())
+  |> decode.field("update", reference())
+  |> decode.field("delete", reference())
+  |> decode.field("list", reference())
+  |> decode.field("operations", optional_list(reference()))
+  |> decode.field("collection_operations", optional_list(reference()))
+  |> decode.field("resources", optional_list(reference()))
   |> decode.field("traits", traits())
 }
 
@@ -283,8 +277,8 @@ fn operation() {
     use traits <- decode.parameter
     Operation(input, output, errors, traits)
   })
-  |> decode.field("input", reference_decoder())
-  |> decode.field("output", reference_decoder())
-  |> decode.field("errors", decode.list(reference_decoder()))
+  |> decode.field("input", reference())
+  |> decode.field("output", reference())
+  |> decode.field("errors", optional_list(reference()))
   |> decode.field("traits", traits())
 }
