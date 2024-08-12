@@ -1,10 +1,10 @@
-// import decode
 import dot_env as dot
 import dot_env/env
 import gleam/dict
 import gleam/option.{None}
 import pprint
 import x/dynamodb
+import x/dynamodb/types
 
 pub fn main() {
   dot.load()
@@ -15,11 +15,11 @@ pub fn main() {
 
   let client = dynamodb.new(access_key_id, secret_access_key, region)
 
-  let key = dict.from_list([#("email", dynamodb.S("ryanmiville@gmail.com"))])
+  let key = dict.from_list([#("email", types.S("ryanmiville@gmail.com"))])
 
   let input =
-    dynamodb.GetItemInput(
-      table_name: "emails",
+    types.GetItemInput(
+      table_name: "doorman-production-WaitlistTable",
       key: key,
       attributes_to_get: None,
       consistent_read: None,
@@ -28,9 +28,6 @@ pub fn main() {
       return_consumed_capacity: None,
     )
 
-  // dynamodb.get_item_input_encoder(input)
-  // |> json.to_string
-  // |> io.println
   let output = dynamodb.get_item(client, input)
   pprint.debug(output)
 }
