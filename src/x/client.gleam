@@ -1,12 +1,27 @@
 import gleam/bit_array
+import gleam/bool
 import gleam/crypto
 import gleam/http
 import gleam/http/request.{type Request, Request}
+import gleam/httpc
 import gleam/int
 import gleam/list
 import gleam/option
 import gleam/string
+import x/aws
 import x/time
+
+pub type Client {
+  Client(
+    access_key_id: String,
+    secret_access_key: String,
+    region: String,
+    content_type: String,
+    endpoint_prefix: String,
+    service_id: String,
+    signing_name: String,
+  )
+}
 
 pub fn sign(
   request request: Request(BitArray),
@@ -115,4 +130,52 @@ pub fn sign(
   let headers = [#("authorization", authorization), ..headers]
 
   Request(..request, headers: headers)
+}
+
+pub fn post_json(
+  client: Client,
+  operation_id: String,
+  body: BitArray,
+) -> Result(BitArray, aws.Error) {
+  let host = client.endpoint_prefix <> "." <> client.region <> ".amazonaws.com"
+
+  let target = client.service_id <> "." <> operation_id
+
+  let assert Ok(request) = request.to("https://" <> host <> "/")
+
+  let request =
+    request.Request(
+      ..request,
+      headers: [
+        #("host", host),
+        #("X-Amz-Target", target),
+        #("content-type", client.content_type),
+      ],
+    )
+    |> request.set_method(http.Post)
+    |> request.set_body(body)
+
+  let request = sign_v4(client, request)
+
+  let response = httpc.send_bits(request)
+
+  case response {
+    Ok(resp) -> {
+      use <- bool.guard(resp.status == 200, Ok(resp.body))
+      let assert Ok(body) = bit_array.to_string(resp.body)
+      Error(aws.ServiceError(body))
+    }
+    Error(dyn) -> Error(aws.UnknownError(string.inspect(dyn)))
+  }
+}
+
+fn sign_v4(client: Client, request: Request(BitArray)) {
+  sign(
+    request,
+    time.utc_now(),
+    client.access_key_id,
+    client.secret_access_key,
+    client.region,
+    client.signing_name,
+  )
 }

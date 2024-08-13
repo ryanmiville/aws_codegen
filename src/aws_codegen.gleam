@@ -1,33 +1,21 @@
 import dot_env as dot
-import dot_env/env
-import gleam/dict
-import gleam/option.{None}
+import gleam/bit_array
 import pprint
+import x/aws
 import x/dynamodb
-import x/dynamodb/types
 
 pub fn main() {
   dot.load()
 
-  let assert Ok(access_key_id) = env.get("AWS_ACCESS_KEY_ID")
-  let assert Ok(secret_access_key) = env.get("AWS_SECRET_ACCESS_KEY")
-  let region = "us-east-1"
+  let client = dynamodb.new(aws.default_credentials_provider())
 
-  let client = dynamodb.new(access_key_id, secret_access_key, region)
+  let body =
+    "{
+    \"TableName\": \"doorman-production-WaitlistTable\",
+    \"Key\": { \"email\": { \"S\": \"ryanmiville@gmail.com\" } }
+    }"
+    |> bit_array.from_string
 
-  let key = dict.from_list([#("email", types.S("ryanmiville@gmail.com"))])
-
-  let input =
-    types.GetItemInput(
-      table_name: "doorman-production-WaitlistTable",
-      key: key,
-      attributes_to_get: None,
-      consistent_read: None,
-      expression_attribute_names: None,
-      projection_expression: None,
-      return_consumed_capacity: None,
-    )
-
-  let output = dynamodb.get_item(client, input)
+  let output = dynamodb.get_item(client, body)
   pprint.debug(output)
 }
