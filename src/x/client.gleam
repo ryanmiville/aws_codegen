@@ -16,7 +16,6 @@ pub type Client {
     access_key_id: String,
     secret_access_key: String,
     region: String,
-    content_type: String,
     endpoint_prefix: String,
     service_id: String,
     signing_name: String,
@@ -136,6 +135,7 @@ pub fn post_json(
   client: Client,
   operation_id: String,
   body: BitArray,
+  content_type: String,
 ) -> Result(BitArray, aws.Error) {
   let host = client.endpoint_prefix <> "." <> client.region <> ".amazonaws.com"
 
@@ -149,7 +149,7 @@ pub fn post_json(
       headers: [
         #("host", host),
         #("X-Amz-Target", target),
-        #("content-type", client.content_type),
+        #("content-type", content_type),
       ],
     )
     |> request.set_method(http.Post)

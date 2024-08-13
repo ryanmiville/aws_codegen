@@ -1,21 +1,22 @@
-import dot_env as dot
-import gleam/bit_array
-import pprint
-import x/aws
-import x/dynamodb
+import codegen/module.{type Module}
+import codegen/parse
+import fileio
+import gleam/io
+import gleam/list
+import smithy/service
 
 pub fn main() {
-  dot.load()
+  fileio.read_file("./aws-models/dynamodb.json")
+  |> service.from_json
+  |> parse.services
+  |> list.map(module.from)
+  |> list.each(write_module)
+}
 
-  let client = dynamodb.new(aws.default_credentials_provider())
+fn write_module(module: Module) {
+  let filepath = "./src/services/" <> module.endpoint_prefix <> ".gleam"
+  let contents = module.generate(module)
 
-  let body =
-    "{
-    \"TableName\": \"doorman-production-WaitlistTable\",
-    \"Key\": { \"email\": { \"S\": \"ryanmiville@gmail.com\" } }
-    }"
-    |> bit_array.from_string
-
-  let output = dynamodb.get_item(client, body)
-  pprint.debug(output)
+  io.println("writing " <> filepath)
+  fileio.write_file(filepath, contents)
 }

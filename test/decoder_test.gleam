@@ -9,9 +9,8 @@ pub fn main() {
   gleeunit.main()
 }
 
-pub fn kinesis_video_webrtc_storage_test() {
-  let assert Ok(example) = simplifile.read("./aws-models/s3.json")
-  // simplifile.read("./aws-models/kinesis-video-webrtc-storage.json")
+pub fn dynamodb_test() {
+  let assert Ok(example) = simplifile.read("./aws-models/dynamodb.json")
 
   let decoder = service.decoder()
   let res = json.decode(example, decode.from(decoder, _))
