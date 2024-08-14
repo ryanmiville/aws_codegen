@@ -74,14 +74,7 @@ const service_id = \"SERVICE_ID\"
 const signing_name = \"SIGNING_NAME\"
 
 pub fn new(config: aws.Config) -> Client {
-  client.Client(
-    config.access_key_id,
-    config.secret_access_key,
-    config.region,
-    endpoint_prefix,
-    service_id,
-    signing_name,
-  )
+  client.Client(config, endpoint_prefix, service_id, signing_name)
 }
 
 "

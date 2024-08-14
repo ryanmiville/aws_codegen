@@ -10,14 +10,7 @@ const service_id = "DynamoDB_20120810"
 const signing_name = "dynamodb"
 
 pub fn new(config: aws.Config) -> Client {
-  client.Client(
-    config.access_key_id,
-    config.secret_access_key,
-    config.region,
-    endpoint_prefix,
-    service_id,
-    signing_name,
-  )
+  client.Client(config, endpoint_prefix, service_id, signing_name)
 }
 
 pub fn batch_execute_statement(

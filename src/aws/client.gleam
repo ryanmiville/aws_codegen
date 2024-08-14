@@ -13,9 +13,7 @@ import gleam/string
 
 pub type Client {
   Client(
-    access_key_id: String,
-    secret_access_key: String,
-    region: String,
+    config: aws.Config,
     endpoint_prefix: String,
     service_id: String,
     signing_name: String,
@@ -137,7 +135,8 @@ pub fn post_json(
   body: BitArray,
   content_type: String,
 ) -> Result(BitArray, aws.Error) {
-  let host = client.endpoint_prefix <> "." <> client.region <> ".amazonaws.com"
+  let host =
+    client.endpoint_prefix <> "." <> client.config.region <> ".amazonaws.com"
 
   let target = client.service_id <> "." <> operation_id
 
@@ -173,9 +172,9 @@ fn sign_v4(client: Client, request: Request(BitArray)) {
   sign(
     request,
     time.utc_now(),
-    client.access_key_id,
-    client.secret_access_key,
-    client.region,
+    client.config.access_key_id,
+    client.config.secret_access_key,
+    client.config.region,
     client.signing_name,
   )
 }
