@@ -28,10 +28,16 @@ pub type Module {
   )
 }
 
-pub fn from(tuple: #(shape_id.ShapeId, shape.Shape)) -> Result(Module, Nil) {
+pub type Error {
+  Error(id: ShapeId, message: String)
+}
+
+pub fn from(tuple: #(shape_id.ShapeId, shape.Shape)) -> Result(Module, Error) {
   let #(id, shape) = tuple
   let assert shape.Service(_, operations, _, _, traits) = shape
+  let error = Error(id, _)
   from_service(id, operations, traits)
+  |> result.map_error(error)
 }
 
 fn reference_string(ref: shape.Reference) -> String {
@@ -115,24 +121,29 @@ fn generate_function(operation_id: String) -> String {
   |> string.replace("OPERATION_ID", operation_id)
 }
 
+fn get(d: Dict(ShapeId, b), key: String) -> Result(b, String) {
+  dict.get(d, ShapeId(key))
+  |> result.replace_error(key <> " not found")
+}
+
 fn from_service(
   shape_id: shape_id.ShapeId,
   operations: List(shape.Reference),
   traits: Dict(ShapeId, Option(Trait)),
-) -> Result(Module, Nil) {
+) -> Result(Module, String) {
   let shape_id.ShapeId(service_id) = shape_id
   let service_id = strip_prefix(service_id)
 
-  use auth <- result.try(dict.get(traits, ShapeId("aws.auth#sigv4")))
+  use auth <- result.try(get(traits, "aws.auth#sigv4"))
   let assert Some(trait.Dict(auth)) = auth
 
-  use signing_name <- result.try(dict.get(auth, ShapeId("name")))
+  use signing_name <- result.try(get(auth, "name"))
   let assert trait.String(signing_name) = signing_name
 
-  use api <- result.try(dict.get(traits, ShapeId("aws.api#service")))
+  use api <- result.try(get(traits, "aws.api#service"))
   let assert Some(trait.Dict(api)) = api
 
-  use endpoint_prefix <- result.map(dict.get(api, ShapeId("endpointPrefix")))
+  use endpoint_prefix <- result.map(get(api, "endpointPrefix"))
   let assert trait.String(endpoint_prefix) = endpoint_prefix
 
   let protocol = {
