@@ -1,8 +1,8 @@
+import aws/aws
+import aws/services/dynamodb
 import dot_env as dot
 import gleam/bit_array
 import pprint
-import services/dynamodb
-import x/aws
 
 pub fn main() {
   dot.load()

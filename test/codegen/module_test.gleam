@@ -1,10 +1,10 @@
 import codegen/module
 import codegen/parse
-import fileio
 import gleam/list
 import gleam/result
 import gleeunit
 import gleeunit/should
+import internal/fileio
 import smithy/service
 
 pub fn main() {

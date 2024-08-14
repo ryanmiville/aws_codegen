@@ -1,24 +1,31 @@
 import codegen/module.{type Module, Json10, Json11}
 import codegen/parse
-import fileio
 import gleam/int
 import gleam/string
 import gleam_community/ansi
-import stringutils
+import internal/fileio
+import internal/stringutils
 
+import argv
 import gleam/io
 import gleam/list
 import gleam/result
 import smithy/service
 
 pub fn main() {
-  run()
+  case argv.load().arguments {
+    [] -> run_all()
+    _ as filepaths -> run(filepaths)
+  }
 }
 
-fn run() {
-  let files =
-    fileio.get_files("./aws-models")
-    |> list.map(file)
+fn run_all() {
+  let filepaths = fileio.get_files("./aws-models")
+  run(filepaths)
+}
+
+fn run(filepaths: List(String)) {
+  let files = list.map(filepaths, file)
 
   let #(supported, unsupported, errors) = partition(files)
 
@@ -123,9 +130,9 @@ fn supported(module: Module) -> Bool {
 }
 
 fn do_write_module(filename: String, module: Module) {
-  let filepath = "./src/services/" <> filename <> ".gleam"
-  let _contents = module.generate(module)
-  // fileio.write_file(filepath, contents)
+  let filepath = "./src/aws/services/" <> filename <> ".gleam"
+  let contents = module.generate(module)
+  fileio.write_file(filepath, contents)
   Written(filepath, module)
 }
 

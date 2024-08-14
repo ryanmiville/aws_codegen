@@ -1,3 +1,5 @@
+import aws/aws
+import aws/internal/time
 import gleam/bit_array
 import gleam/bool
 import gleam/crypto
@@ -8,8 +10,6 @@ import gleam/int
 import gleam/list
 import gleam/option
 import gleam/string
-import x/aws
-import x/time
 
 pub type Client {
   Client(

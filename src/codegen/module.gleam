@@ -4,10 +4,10 @@ import gleam/list
 import gleam/option.{type Option, Some}
 import gleam/result
 import gleam/string
+import internal/stringutils
 import smithy/shape
 import smithy/shape_id.{type ShapeId, ShapeId}
 import smithy/trait.{type Trait}
-import stringutils
 
 pub type Protocol {
   Json10
@@ -62,8 +62,8 @@ fn content_type(protocol: Protocol) -> String {
 }
 
 const template = "
-import x/aws
-import x/client.{type Client}
+import aws/aws
+import aws/client.{type Client}
 
 const content_type = \"CONTENT_TYPE\"
 
