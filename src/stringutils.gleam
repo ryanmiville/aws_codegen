@@ -4,9 +4,15 @@ import gleam/string
 
 const pascal = "(^[A-Z])|[A-Z]"
 
+const kebab = "-([a-zA-Z0-9])"
+
 pub fn pascal_to_snake(in string: String) -> String {
   let assert Ok(#(first, rest)) = string.pop_grapheme(string)
   string.lowercase(first) <> sub(rest, pascal, to_snake)
+}
+
+pub fn kebab_to_snake(in string: String) -> String {
+  sub(string, kebab, to_snake)
 }
 
 fn to_snake(match: Match) -> String {
