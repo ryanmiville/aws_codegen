@@ -1,6 +1,8 @@
 import gleam/bool
 import gleam/dict.{type Dict}
 import gleam/list
+import gleam/option.{type Option, Some}
+import gleam/result
 import gleam/string
 import smithy/shape
 import smithy/shape_id.{type ShapeId, ShapeId}
@@ -26,52 +28,10 @@ pub type Module {
   )
 }
 
-pub fn from(tuple: #(shape_id.ShapeId, shape.Shape)) -> Module {
+pub fn from(tuple: #(shape_id.ShapeId, shape.Shape)) -> Result(Module, Nil) {
   let #(id, shape) = tuple
   let assert shape.Service(_, operations, _, _, traits) = shape
   from_service(id, operations, traits)
-}
-
-fn from_service(
-  shape_id: shape_id.ShapeId,
-  operations: List(shape.Reference),
-  traits: Dict(ShapeId, Trait),
-) -> Module {
-  let shape_id.ShapeId(service_id) = shape_id
-  let service_id = strip_prefix(service_id)
-  let assert Ok(trait.Dict(api)) = dict.get(traits, ShapeId("aws.api#service"))
-  let assert Ok(trait.String(endpoint_prefix)) =
-    dict.get(api, ShapeId("endpointPrefix"))
-
-  let assert Ok(trait.Dict(auth)) = dict.get(traits, ShapeId("aws.auth#sigv4"))
-  let assert Ok(trait.String(signing_name)) = dict.get(auth, ShapeId("name"))
-
-  let protocol = {
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#awsJson1_0")),
-      Json10,
-    )
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#awsJson1_1")),
-      Json11,
-    )
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#restJson1")),
-      RestJson1,
-    )
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#restXml")),
-      RestXml,
-    )
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#ec2QueryName")),
-      Ec2QueryName,
-    )
-    AwsQueryError
-  }
-
-  let operations = list.map(operations, reference_string)
-  Module(service_id, endpoint_prefix, signing_name, protocol, operations)
 }
 
 fn reference_string(ref: shape.Reference) -> String {
@@ -153,4 +113,52 @@ fn generate_function(operation_id: String) -> String {
   fn_template
   |> string.replace("FUNCTION_NAME", fn_name)
   |> string.replace("OPERATION_ID", operation_id)
+}
+
+fn from_service(
+  shape_id: shape_id.ShapeId,
+  operations: List(shape.Reference),
+  traits: Dict(ShapeId, Option(Trait)),
+) -> Result(Module, Nil) {
+  let shape_id.ShapeId(service_id) = shape_id
+  let service_id = strip_prefix(service_id)
+
+  use auth <- result.try(dict.get(traits, ShapeId("aws.auth#sigv4")))
+  let assert Some(trait.Dict(auth)) = auth
+
+  use signing_name <- result.try(dict.get(auth, ShapeId("name")))
+  let assert trait.String(signing_name) = signing_name
+
+  use api <- result.try(dict.get(traits, ShapeId("aws.api#service")))
+  let assert Some(trait.Dict(api)) = api
+
+  use endpoint_prefix <- result.map(dict.get(api, ShapeId("endpointPrefix")))
+  let assert trait.String(endpoint_prefix) = endpoint_prefix
+
+  let protocol = {
+    use <- bool.guard(
+      dict.has_key(traits, ShapeId("aws.protocols#awsJson1_0")),
+      Json10,
+    )
+    use <- bool.guard(
+      dict.has_key(traits, ShapeId("aws.protocols#awsJson1_1")),
+      Json11,
+    )
+    use <- bool.guard(
+      dict.has_key(traits, ShapeId("aws.protocols#restJson1")),
+      RestJson1,
+    )
+    use <- bool.guard(
+      dict.has_key(traits, ShapeId("aws.protocols#restXml")),
+      RestXml,
+    )
+    use <- bool.guard(
+      dict.has_key(traits, ShapeId("aws.protocols#ec2QueryName")),
+      Ec2QueryName,
+    )
+    AwsQueryError
+  }
+
+  let operations = list.map(operations, reference_string)
+  Module(service_id, endpoint_prefix, signing_name, protocol, operations)
 }

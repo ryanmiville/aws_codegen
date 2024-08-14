@@ -2,6 +2,13 @@ import gleam/string
 import shellout
 import simplifile
 
+pub fn get_files(dir: String) {
+  case simplifile.get_files(dir) {
+    Ok(files) -> files
+    _ -> panic as { "Failed to list files " <> dir }
+  }
+}
+
 pub fn read_file(filepath) {
   case simplifile.read(filepath) {
     Ok(content) -> content

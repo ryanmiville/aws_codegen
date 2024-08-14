@@ -2,6 +2,7 @@ import codegen/module
 import codegen/parse
 import fileio
 import gleam/list
+import gleam/result
 import gleeunit
 import gleeunit/should
 import smithy/service
@@ -15,6 +16,7 @@ pub fn module_test() {
   |> service.from_json
   |> parse.services
   |> list.map(module.from)
+  |> result.values
   |> should.equal([
     module.Module("DynamoDB_20120810", "dynamodb", "dynamodb", module.Json10, [
       "BatchExecuteStatement", "BatchGetItem", "BatchWriteItem", "CreateBackup",
@@ -47,6 +49,7 @@ pub fn generate_test() {
     |> service.from_json
     |> parse.services
     |> list.map(module.from)
+    |> result.values
     |> list.map(module.generate)
 
   contents

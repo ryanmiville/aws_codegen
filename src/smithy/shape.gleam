@@ -13,7 +13,7 @@ pub type Member {
 }
 
 pub type Traits =
-  dict.Dict(ShapeId, Trait)
+  dict.Dict(ShapeId, Option(Trait))
 
 pub type Shape {
   /// Simple
@@ -40,7 +40,7 @@ pub type Shape {
   Enum(traits: Traits, members: Dict(String, Member))
 
   Service(
-    version: String,
+    version: Option(String),
     operations: List(Reference),
     resources: List(Reference),
     errors: List(Reference),
@@ -49,12 +49,12 @@ pub type Shape {
   Resource(
     identifiers: Dict(String, Reference),
     properties: Dict(String, Reference),
-    create: Reference,
-    put: Reference,
-    read: Reference,
-    update: Reference,
-    delete: Reference,
-    list: Reference,
+    create: Option(Reference),
+    put: Option(Reference),
+    read: Option(Reference),
+    update: Option(Reference),
+    delete: Option(Reference),
+    list: Option(Reference),
     operations: List(Reference),
     collection_operations: List(Reference),
     resources: List(Reference),
@@ -91,7 +91,7 @@ fn members() -> Decoder(Dict(String, Member)) {
 }
 
 fn traits() {
-  optional_dict(shape_id.decoder(), trait.decoder())
+  optional_dict(shape_id.decoder(), decode.optional(trait.decoder()))
 }
 
 fn optional_dict(key: Decoder(k), value: Decoder(v)) -> Decoder(Dict(k, v)) {
@@ -215,7 +215,7 @@ fn service() {
     use traits <- decode.parameter
     Service(version, operations, resources, errors, traits)
   })
-  |> decode.field("version", decode.string)
+  |> decode.field("version", decode.optional(decode.string))
   |> decode.field("operations", optional_list(reference()))
   |> decode.field("resources", optional_list(reference()))
   |> decode.field("errors", optional_list(reference()))
@@ -253,12 +253,12 @@ fn resource() {
   })
   |> decode.field("identifiers", optional_dict(decode.string, reference()))
   |> decode.field("properties", optional_dict(decode.string, reference()))
-  |> decode.field("create", reference())
-  |> decode.field("put", reference())
-  |> decode.field("read", reference())
-  |> decode.field("update", reference())
-  |> decode.field("delete", reference())
-  |> decode.field("list", reference())
+  |> decode.field("create", decode.optional(reference()))
+  |> decode.field("put", decode.optional(reference()))
+  |> decode.field("read", decode.optional(reference()))
+  |> decode.field("update", decode.optional(reference()))
+  |> decode.field("delete", decode.optional(reference()))
+  |> decode.field("list", decode.optional(reference()))
   |> decode.field("operations", optional_list(reference()))
   |> decode.field("collection_operations", optional_list(reference()))
   |> decode.field("resources", optional_list(reference()))
