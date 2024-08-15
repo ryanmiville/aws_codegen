@@ -43,11 +43,19 @@ fn output(
   let len = list.length(written) |> int.to_string
   io.println(ansi.green("Successfully wrote " <> len <> " files"))
 
-  let len = list.length(unsupported) |> int.to_string
-  io.println(ansi.bright_blue("Skipped " <> len <> " unsupported files"))
+  let len = list.length(unsupported)
+  let message = "Skipped " <> int.to_string(len) <> " unsupported files"
+  case len == 0 {
+    True -> io.println(ansi.dim(message))
+    False -> io.println(ansi.bright_blue(message))
+  }
 
-  let len = list.length(errors) |> int.to_string
-  io.println(ansi.red("Encountered " <> len <> " errors"))
+  let len = list.length(errors)
+  let message = "Encountered " <> int.to_string(len) <> " errors"
+  case len == 0 {
+    True -> io.println(ansi.dim(message))
+    False -> io.println(ansi.red(message))
+  }
 }
 
 fn verbose(

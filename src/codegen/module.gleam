@@ -64,6 +64,8 @@ fn content_type(protocol: Protocol) -> String {
 const template = "
 import aws/aws
 import aws/client.{type Client}
+import aws/config.{type Config}
+import aws/internal/endpoint
 
 const content_type = \"CONTENT_TYPE\"
 
@@ -73,8 +75,9 @@ const service_id = \"SERVICE_ID\"
 
 const signing_name = \"SIGNING_NAME\"
 
-pub fn new(config: aws.Config) -> Client {
-  client.Client(config, endpoint_prefix, service_id, signing_name)
+pub fn new(config: Config) -> Client {
+  let endpoint = endpoint.resolve(config, endpoint_prefix)
+  client.Client(config, service_id, signing_name, endpoint)
 }
 
 "
@@ -133,11 +136,13 @@ fn from_service(
   use signing_name <- result.try(get(auth, "name"))
   let assert trait.String(signing_name) = signing_name
 
-  use api <- result.try(get(traits, "aws.api#service"))
+  use api <- result.map(get(traits, "aws.api#service"))
   let assert Some(trait.Dict(api)) = api
 
-  use endpoint_prefix <- result.map(get(api, "endpointPrefix"))
-  let assert trait.String(endpoint_prefix) = endpoint_prefix
+  let endpoint_prefix = case get(api, "endpointPrefix") {
+    Ok(trait.String(ep)) -> ep
+    _ -> signing_name
+  }
 
   let protocol = {
     use <- bool.guard(

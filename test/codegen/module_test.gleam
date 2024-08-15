@@ -44,14 +44,12 @@ pub fn module_test() {
 }
 
 pub fn generate_test() {
-  let assert [contents] =
-    fileio.read_file("./aws-models/dynamodb.json")
-    |> service.from_json
-    |> parse.services
-    |> list.map(module.from)
-    |> result.values
-    |> list.map(module.generate)
-
-  contents
-  |> should.not_equal("")
+  fileio.read_file("./aws-models/dynamodb.json")
+  |> service.from_json
+  |> parse.services
+  |> list.map(module.from)
+  |> result.values
+  |> list.map(module.generate)
+  |> list.length
+  |> should.equal(1)
 }

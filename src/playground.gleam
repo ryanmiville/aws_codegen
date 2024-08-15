@@ -1,13 +1,18 @@
-import aws/aws
+import aws/config
 import aws/services/dynamodb
 import dot_env as dot
 import gleam/bit_array
+import gleam/result
 import pprint
 
 pub fn main() {
   dot.load()
 
-  let client = dynamodb.new(aws.default_credentials_provider())
+  let assert Ok(client) =
+    config.new()
+    |> config.with_region("us-east-1")
+    |> config.build
+    |> result.map(dynamodb.new)
 
   let body =
     "{

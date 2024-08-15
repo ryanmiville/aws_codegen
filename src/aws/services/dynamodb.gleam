@@ -1,5 +1,7 @@
 import aws/aws
 import aws/client.{type Client}
+import aws/config.{type Config}
+import aws/internal/endpoint
 
 const content_type = "application/x-amz-json-1.0"
 
@@ -9,8 +11,9 @@ const service_id = "DynamoDB_20120810"
 
 const signing_name = "dynamodb"
 
-pub fn new(config: aws.Config) -> Client {
-  client.Client(config, endpoint_prefix, service_id, signing_name)
+pub fn new(config: Config) -> Client {
+  let endpoint = endpoint.resolve(config, endpoint_prefix)
+  client.Client(config, service_id, signing_name, endpoint)
 }
 
 pub fn batch_execute_statement(

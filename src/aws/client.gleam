@@ -1,4 +1,5 @@
 import aws/aws
+import aws/config
 import aws/internal/time
 import gleam/bit_array
 import gleam/bool
@@ -13,10 +14,10 @@ import gleam/string
 
 pub type Client {
   Client(
-    config: aws.Config,
-    endpoint_prefix: String,
+    config: config.Config,
     service_id: String,
     signing_name: String,
+    endpoint: String,
   )
 }
 
@@ -135,12 +136,16 @@ pub fn post_json(
   body: BitArray,
   content_type: String,
 ) -> Result(BitArray, aws.Error) {
-  let host =
-    client.endpoint_prefix <> "." <> client.config.region <> ".amazonaws.com"
+  let host = case client.endpoint {
+    "http://localhost:8000" -> "localhost"
+    "https://" <> rest -> rest
+    "http://" <> rest -> rest
+    other -> other
+  }
 
   let target = client.service_id <> "." <> operation_id
 
-  let assert Ok(request) = request.to("https://" <> host <> "/")
+  let assert Ok(request) = request.to(client.endpoint <> "/")
 
   let request =
     request.Request(
