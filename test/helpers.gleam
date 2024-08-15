@@ -1,30 +1,15 @@
 import aws/client.{type Client}
 import aws/config.{type Config}
 import aws/internal/endpoint
-
-import aws/services/dynamodb
 import decode
 import gleam/json
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleeunit
 import gleeunit/should
 
 import internal/fileio
 
-pub fn main() {
-  gleeunit.main()
-}
-
-pub fn dynamodb_test() {
-  endpoint_test(
-    "./aws-models/dynamodb.json",
-    "com.amazonaws.dynamodb#DynamoDB_20120810",
-    dynamodb.new,
-  )
-}
-
-fn endpoint_test(
+pub fn test_endpoints(
   filepath: String,
   shape_id: String,
   constructor: fn(Config) -> Client,
