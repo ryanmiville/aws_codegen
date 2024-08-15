@@ -30,7 +30,6 @@ fn run(filepaths: List(String)) {
 
   let #(supported, unsupported, errors) = partition(files)
 
-  let supported = list.take(supported, 5)
   let test_cases = supported |> list.map(test_case)
 
   let written = supported |> list.map(write_module)
@@ -68,7 +67,11 @@ fn output(
 
 fn test_case(sup: Supported) -> TestCase {
   let module_name = module_name(sup)
-  let shape_id = "com.amazonaws." <> module_name <> "#" <> sup.module.service_id
+  let shape_id =
+    "com.amazonaws."
+    <> string.replace(module_name, "_", "")
+    <> "#"
+    <> sup.module.service_id
   TestCase(sup.path, shape_id, module_name)
 }
 

@@ -45,5 +45,5 @@ fn imports(modules: List(String)) {
 }
 
 fn do_import(module: String) {
-  "import aws/services/" <> module
+  "import aws/service/" <> module
 }

@@ -3,3 +3,5 @@
 /build
 erl_crash.dump
 .env
+src/aws/service
+test/aws/service/endpoint_test.gleam
