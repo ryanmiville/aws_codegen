@@ -26,8 +26,6 @@ pub opaque type ConfigBuilder {
     session_token: Env,
     region: Env,
     endpoint: Option(String),
-    use_fips: Bool,
-    use_dualstack: Bool,
     proto: String,
     port: Int,
   )
@@ -40,8 +38,6 @@ pub type Config {
     region: String,
     session_token: Option(String),
     endpoint: Option(String),
-    use_fips: Bool,
-    use_dualstack: Bool,
   )
 }
 
@@ -57,8 +53,6 @@ pub fn new() -> ConfigBuilder {
     session_token:,
     region:,
     endpoint: None,
-    use_fips: False,
-    use_dualstack: False,
     proto: "https",
     port: 443,
   )
@@ -84,14 +78,6 @@ pub fn with_session_token(builder: ConfigBuilder, session_token: String) {
   ConfigBuilder(..builder, session_token: Ok(session_token))
 }
 
-pub fn with_fips(builder: ConfigBuilder, use_fips: Bool) {
-  ConfigBuilder(..builder, use_fips: use_fips)
-}
-
-pub fn with_dualstack(builder: ConfigBuilder, use_dualstack: Bool) {
-  ConfigBuilder(..builder, use_dualstack: use_dualstack)
-}
-
 pub fn build(builder: ConfigBuilder) -> Result(Config, ConfigError) {
   builder |> do_build |> result.map_error(ConfigError)
 }
@@ -107,7 +93,5 @@ fn do_build(builder: ConfigBuilder) -> Result(Config, String) {
     region:,
     session_token:,
     endpoint: builder.endpoint,
-    use_fips: builder.use_fips,
-    use_dualstack: builder.use_dualstack,
   )
 }

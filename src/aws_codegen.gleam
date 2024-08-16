@@ -1,4 +1,3 @@
-import codegen/endpoint_tests.{type TestCase, TestCase}
 import codegen/module.{type Module, Json10, Json11}
 import codegen/parse
 import gleam/int
@@ -30,13 +29,7 @@ fn run(filepaths: List(String)) {
 
   let #(supported, unsupported, errors) = partition(files)
 
-  let test_cases = supported |> list.map(test_case)
-
-  let written = supported |> list.map(write_module)
-
-  let test_file_contents = endpoint_tests.make(test_cases)
-  let test_file = "./test/aws/service/endpoint_test.gleam"
-  fileio.write_file(test_file, test_file_contents)
+  let written = list.map(supported, write_module)
 
   verbose(written, unsupported, errors)
   output(written, unsupported, errors)
@@ -63,16 +56,6 @@ fn output(
     True -> io.println(ansi.dim(message))
     False -> io.println(ansi.red(message))
   }
-}
-
-fn test_case(sup: Supported) -> TestCase {
-  let module_name = module_name(sup)
-  let shape_id =
-    "com.amazonaws."
-    <> string.replace(module_name, "_", "")
-    <> "#"
-    <> sup.module.service_id
-  TestCase(sup.path, shape_id, module_name)
 }
 
 fn verbose(
@@ -145,12 +128,6 @@ fn write_module(supported: Supported) {
     short_name(supported.path) |> string.split_once(".")
   let name = stringutils.kebab_to_snake(name)
   do_write_module(name, supported.module)
-}
-
-fn module_name(supported: Supported) {
-  let assert Ok(#(name, _)) =
-    short_name(supported.path) |> string.split_once(".")
-  stringutils.kebab_to_snake(name)
 }
 
 fn supported(module: Module) -> Bool {

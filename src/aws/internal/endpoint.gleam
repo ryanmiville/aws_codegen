@@ -15,26 +15,12 @@ fn do_resolve(config: config.Config, endpoint_prefix: String) -> String {
   use <- bool.guard(config.region == "local", "http://localhost:8000")
   string.concat([
     "https://",
-    prefix(endpoint_prefix, config.use_fips),
+    endpoint_prefix,
     ".",
     config.region,
     ".",
-    partition_dns(config.use_dualstack),
+    "amazonaws.com",
   ])
-}
-
-fn prefix(endpoint_prefix: String, use_fips: Bool) {
-  case use_fips {
-    True -> endpoint_prefix <> "-fips"
-    False -> endpoint_prefix
-  }
-}
-
-fn partition_dns(use_dualstack: Bool) -> String {
-  case use_dualstack {
-    False -> "amazonaws.com"
-    True -> "api.aws"
-  }
 }
 
 pub fn supported(region: String) -> Bool {
