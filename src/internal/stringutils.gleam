@@ -21,7 +21,7 @@ fn to_snake(match: Match) -> String {
   }
 }
 
-fn sub(
+pub fn sub(
   in string: String,
   each pattern: String,
   with substitute: fn(Match) -> String,

@@ -1,5 +1,5 @@
-import codegen/module.{type Module, Json10, Json11}
 import codegen/parse
+import codegen/rest.{type Module, RestXml}
 import gleam/int
 import gleam/string
 import gleam_community/ansi
@@ -94,7 +94,7 @@ fn partition(
 }
 
 type File {
-  File(path: String, module: Result(Module, module.Error))
+  File(path: String, module: Result(Module, rest.Error))
 }
 
 type Supported {
@@ -106,21 +106,21 @@ type Written {
 }
 
 type Unsupported {
-  Unsupported(path: String, protocol: module.Protocol)
+  Unsupported(path: String, protocol: rest.Protocol)
 }
 
 type Err {
-  Err(path: String, error: module.Error)
+  Err(path: String, error: rest.Error)
 }
 
 fn file(filepath: String) {
   io.println(ansi.dim("parsing " <> filepath <> "..."))
+  let spec = fileio.read_file(filepath)
   let assert [service] =
-    fileio.read_file(filepath)
-    |> service.from_json
+    service.from_json(spec)
     |> parse.services
 
-  File(filepath, module.from(service))
+  File(filepath, rest.from(service, spec))
 }
 
 fn write_module(supported: Supported) {
@@ -132,14 +132,15 @@ fn write_module(supported: Supported) {
 
 fn supported(module: Module) -> Bool {
   case module.protocol {
-    Json10 | Json11 -> True
+    rest.RestXml -> True
+    // Json10 | Json11 -> True
     _ -> False
   }
 }
 
 fn do_write_module(filename: String, module: Module) {
-  let filepath = "./src/aws/service/" <> filename <> ".gleam"
-  let contents = module.generate(module)
+  let filepath = "./src/aws/x/service/" <> filename <> ".gleam"
+  let contents = rest.generate(module)
   fileio.write_file(filepath, contents)
   Written(filepath, module)
 }

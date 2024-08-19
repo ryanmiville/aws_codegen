@@ -4,12 +4,14 @@ import aws/internal/time
 import gleam/bit_array
 import gleam/bool
 import gleam/crypto
-import gleam/http
+import gleam/dynamic.{type Dynamic}
+import gleam/http.{type Header}
 import gleam/http/request.{type Request, Request}
+import gleam/http/response.{type Response}
 import gleam/httpc
 import gleam/int
 import gleam/list
-import gleam/option
+import gleam/option.{type Option}
 import gleam/string
 
 pub type Client {
@@ -136,13 +138,6 @@ pub fn post_json(
   body: BitArray,
   content_type: String,
 ) -> Result(BitArray, aws.Error) {
-  let host = case client.endpoint {
-    "http://localhost:8000" -> "localhost"
-    "https://" <> rest -> rest
-    "http://" <> rest -> rest
-    other -> other
-  }
-
   let target = client.service_id <> "." <> operation_id
 
   let assert Ok(request) = request.to(client.endpoint <> "/")
@@ -151,7 +146,7 @@ pub fn post_json(
     request.Request(
       ..request,
       headers: [
-        #("host", host),
+        #("host", host(client)),
         #("X-Amz-Target", target),
         #("content-type", content_type),
       ],
@@ -182,4 +177,34 @@ fn sign_v4(client: Client, request: Request(BitArray)) {
     client.config.region,
     client.signing_name,
   )
+}
+
+pub fn send(
+  client: Client,
+  method: http.Method,
+  path: String,
+  headers: List(Header),
+  query: Option(String),
+  body: Option(BitArray),
+) -> Result(Response(BitArray), Dynamic) {
+  let assert Ok(request) = request.to(client.endpoint <> "/" <> path)
+  let headers = [#("host", host(client)), ..headers]
+
+  let body = option.unwrap(body, bit_array.from_string(""))
+  let request =
+    request.Request(..request, headers: headers, query: query)
+    |> request.set_method(method)
+    |> request.set_body(body)
+
+  let request = sign_v4(client, request)
+  httpc.send_bits(request)
+}
+
+fn host(client: Client) -> String {
+  case client.endpoint {
+    "http://localhost:8000" -> "localhost"
+    "https://" <> rest -> rest
+    "http://" <> rest -> rest
+    other -> other
+  }
 }
