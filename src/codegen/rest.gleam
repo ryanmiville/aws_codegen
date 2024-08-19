@@ -1,63 +1,17 @@
+import codegen/module.{
+  type Module, type Operation, type Protocol, Operation, Rest, RestJson1,
+  RestXml,
+}
 import decode
-import gleam/bool
-import gleam/dict.{type Dict}
 import gleam/json
 import gleam/list
-import gleam/option.{type Option, Some}
+import gleam/option.{Some}
 import gleam/regex.{type Match}
 import gleam/result
 import gleam/string
 import internal/stringutils
 import smithy/shape
 import smithy/shape_id.{type ShapeId, ShapeId}
-import smithy/trait.{type Trait}
-
-pub type Protocol {
-  Json10
-  Json11
-  RestJson1
-  RestXml
-  Ec2QueryName
-  AwsQueryError
-}
-
-pub type Operation {
-  Operation(
-    id: String,
-    method: String,
-    uri: String,
-    code: Int,
-    input: String,
-    body: Bool,
-    parameters: List(String),
-    path_code: String,
-  )
-}
-
-pub type Module {
-  Module(
-    service_id: String,
-    endpoint_prefix: String,
-    signing_name: String,
-    protocol: Protocol,
-    operations: List(Operation),
-  )
-}
-
-pub type Error {
-  Error(id: ShapeId, message: String)
-}
-
-pub fn from(
-  tuple: #(shape_id.ShapeId, shape.Shape),
-  spec: String,
-) -> Result(Module, Error) {
-  let #(id, shape) = tuple
-  let assert shape.Service(_, operations, _, _, traits) = shape
-  let error = Error(id, _)
-  from_service(id, operations, traits, spec)
-  |> result.map_error(error)
-}
 
 fn get_operation(operation_name: ShapeId, spec: String) {
   let ShapeId(name) = operation_name
@@ -83,25 +37,9 @@ fn body(name: String) -> decode.Decoder(Bool) {
   |> decode.map(fn(_) { True })
 }
 
-// fn reference_string(ref: shape.Reference) -> String {
-//   let ShapeId(name) = ref.target
-//   strip_prefix(name)
-// }
-
 fn strip_prefix(string: String) -> String {
   let assert Ok(#(_, string)) = string.split_once(string, "#")
   string
-}
-
-fn content_type(protocol: Protocol) -> String {
-  case protocol {
-    Json10 -> "application/x-amz-json-1.0"
-    Json11 -> "application/x-amz-json-1.1"
-    RestJson1 -> "application/json"
-    RestXml -> "text/xml"
-    Ec2QueryName -> panic as "not implemented"
-    AwsQueryError -> panic as "not implemented"
-  }
 }
 
 const template = "
@@ -142,8 +80,9 @@ pub fn FUNCTION_NAME(
 "
 
 pub fn generate(module: Module) -> String {
+  let assert Rest(_, _, _, _, operations) = module
   let functions =
-    module.operations
+    operations
     |> list.map(fn(op) { generate_function(op, module.protocol) })
     |> string.concat
 
@@ -218,65 +157,10 @@ fn fn_param(param: String) -> String {
   param <> ": String,\n"
 }
 
-fn get(d: Dict(ShapeId, b), key: String) -> Result(b, String) {
-  dict.get(d, ShapeId(key))
-  |> result.replace_error(key <> " not found")
-}
-
-fn from_service(
-  shape_id: shape_id.ShapeId,
-  operations: List(shape.Reference),
-  traits: Dict(ShapeId, Option(Trait)),
-  spec: String,
-) -> Result(Module, String) {
-  let shape_id.ShapeId(service_id) = shape_id
-  let service_id = strip_prefix(service_id)
-
-  use auth <- result.try(get(traits, "aws.auth#sigv4"))
-  let assert Some(trait.Dict(auth)) = auth
-
-  use signing_name <- result.try(get(auth, "name"))
-  let assert trait.String(signing_name) = signing_name
-
-  use api <- result.try(get(traits, "aws.api#service"))
-  let assert Some(trait.Dict(api)) = api
-
-  let endpoint_prefix = case get(api, "endpointPrefix") {
-    Ok(trait.String(ep)) -> ep
-    _ -> signing_name
-  }
-
-  let protocol = {
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#awsJson1_0")),
-      Json10,
-    )
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#awsJson1_1")),
-      Json11,
-    )
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#restJson1")),
-      RestJson1,
-    )
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#restXml")),
-      RestXml,
-    )
-    use <- bool.guard(
-      dict.has_key(traits, ShapeId("aws.protocols#ec2QueryName")),
-      Ec2QueryName,
-    )
-    AwsQueryError
-  }
-
-  let operations =
-    list.map(operations, fn(op) { get_operation(op.target, spec) })
-    |> result.all
-    |> result.map_error(string.inspect)
-
-  use operations <- result.map(operations)
-  Module(service_id, endpoint_prefix, signing_name, protocol, operations)
+pub fn operations(operations: List(shape.Reference), spec: String) {
+  list.map(operations, fn(op) { get_operation(op.target, spec) })
+  |> result.all
+  |> result.map_error(string.inspect)
 }
 
 pub fn operation(operation_name: String) {
@@ -297,7 +181,7 @@ pub fn operation(operation_name: String) {
   )
   |> decode.subfield(
     ["shapes", operation_name, "traits", "smithy.api#http", "code"],
-    decode.int,
+    decode.optional(decode.int),
   )
   |> decode.subfield(
     ["shapes", operation_name, "input", "target"],
@@ -323,7 +207,10 @@ pub fn build_uri(uri: String) {
 
 fn snake(match: Match) -> String {
   let assert [Some(sub)] = match.submatches
-  stringutils.pascal_to_snake(sub)
+  case stringutils.pascal_to_snake(sub) {
+    "type" -> "type_"
+    s -> s
+  }
 }
 
 fn replace(match: Match) -> String {
