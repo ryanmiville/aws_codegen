@@ -49,7 +49,7 @@ import aws/internal/endpoint
 import gleam/dynamic.{type Dynamic}
 import gleam/http.{type Header}
 import gleam/http/response.{type Response}
-import gleam/option.{type Option, None, Some}
+import gleam/option.{type Option}
 import gleam/string
 
 const endpoint_prefix = \"ENDPOINT_PREFIX\"
@@ -102,8 +102,8 @@ fn generate_function(operation: Operation, protocol: Protocol) -> String {
   let content_type = content_type_header(operation.body, protocol)
   let method = method(operation.method)
   let body_option = case operation.body {
-    True -> "Some(body)"
-    False -> "None"
+    True -> "option.Some(body)"
+    False -> "option.None"
   }
 
   fn_template
