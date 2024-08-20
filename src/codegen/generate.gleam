@@ -1,8 +1,9 @@
+import codegen/json_post
 import codegen/module.{
   type Module, AwsQueryError, Ec2QueryName, Json10, Json11, Post, Rest,
   RestJson1, RestXml,
 }
-import codegen/post
+import codegen/query_post
 import codegen/rest
 import gleam/bool
 import gleam/dict.{type Dict}
@@ -26,9 +27,9 @@ pub fn module(
 
 pub fn code(module: Module) -> String {
   case module.protocol {
-    Json10 | Json11 -> post.generate(module)
+    Json10 | Json11 -> json_post.generate(module)
     RestXml | RestJson1 -> rest.generate(module)
-    _ -> panic as "not implemented"
+    Ec2QueryName | AwsQueryError -> query_post.generate(module)
   }
 }
 
@@ -94,15 +95,21 @@ fn from_service(
       let assert Ok(ops) = rest.operations(operations, spec)
       Ok(Rest(service_id, endpoint_prefix, signing_name, protocol, ops))
     }
-    // Json10 | Json11 ->
-    _ ->
+    Json10 | Json11 ->
       Ok(Post(
         service_id,
         endpoint_prefix,
         signing_name,
         protocol,
-        post.operations(operations),
+        json_post.operations(operations),
       ))
-    // _ -> Error("not implemented")
+    Ec2QueryName | AwsQueryError ->
+      Ok(Post(
+        service_id,
+        endpoint_prefix,
+        signing_name,
+        protocol,
+        query_post.operations(operations),
+      ))
   }
 }

@@ -1,5 +1,5 @@
 import codegen/generate
-import codegen/module.{type Module, Json10, Json11, RestJson1, RestXml}
+import codegen/module.{type Module}
 import codegen/parse
 import gleam/int
 import gleam/string
@@ -149,10 +149,7 @@ fn supported(module: Module) -> Bool {
     module.Rest(_, _, _, _, ops) -> list.length(ops)
     module.Post(_, _, _, _, ops) -> list.length(ops)
   }
-  case module.protocol {
-    RestXml | RestJson1 | Json10 | Json11 -> num_ops > 0
-    _ -> False
-  }
+  num_ops > 0
 }
 
 fn do_write_module(filename: String, module: Module) {
