@@ -2,10 +2,10 @@ import codegen/module.{
   type Module, type Operation, type Protocol, Operation, Rest, RestJson1,
   RestXml,
 }
+import codegen/operation
 import decode
-import gleam/json
 import gleam/list
-import gleam/option.{Some}
+import gleam/option.{type Option, None, Some}
 import gleam/regex.{type Match}
 import gleam/result
 import gleam/string
@@ -14,32 +14,7 @@ import smithy/shape
 import smithy/shape_id.{type ShapeId, ShapeId}
 
 fn get_operation(operation_name: ShapeId, spec: String) {
-  let ShapeId(name) = operation_name
-  let decoder = operation(name)
-  use op <- result.map(json.decode(spec, decode.from(decoder, _)))
-  let body =
-    json.decode(spec, decode.from(body(op.input), _)) |> result.unwrap(False)
-  let id = strip_prefix(name)
-  let params = op_params(op.uri)
-  let path_code = build_uri(op.uri)
-  Operation(..op, id: id, parameters: params, path_code: path_code, body: body)
-}
-
-fn body(name: String) -> decode.Decoder(Bool) {
-  decode.into({
-    use body <- decode.parameter
-    body
-  })
-  |> decode.subfield(
-    ["shapes", name, "members", "Body", "target"],
-    decode.string,
-  )
-  |> decode.map(fn(_) { True })
-}
-
-fn strip_prefix(string: String) -> String {
-  let assert Ok(#(_, string)) = string.split_once(string, "#")
-  string
+  operation.get_operation(operation_name, spec)
 }
 
 const template = "
@@ -98,10 +73,11 @@ fn generate_client(module: Module) -> String {
 
 fn generate_function(operation: Operation, protocol: Protocol) -> String {
   let fn_name = stringutils.pascal_to_snake(operation.id)
-  let params = fn_params(operation.parameters, operation.body)
-  let content_type = content_type_header(operation.body, protocol)
+  let has_body = option.is_some(operation.payload_type)
+  let params = fn_params(operation.parameters, has_body)
+  let content_type = content_type_header(operation.payload_type, protocol)
   let method = method(operation.method)
-  let body_option = case operation.body {
+  let body_option = case has_body {
     True -> "option.Some(body)"
     False -> "option.None"
   }
@@ -130,11 +106,17 @@ fn method(method: String) {
   }
 }
 
-fn content_type_header(body: Bool, protocol: Protocol) {
-  let content_type = case body, protocol {
-    True, _ -> "application/octet-stream"
-    False, RestJson1 -> "application/json"
-    False, RestXml -> "text/xml"
+fn content_type_header(payload_type: Option(String), protocol: Protocol) {
+  let content_type = case payload_type, protocol {
+    Some("blob"), _ -> "application/octet-stream"
+    Some("string"), _ -> "text/plain"
+    Some("structure"), RestXml -> "application/xml"
+    Some("structure"), RestJson1 -> "application/json"
+    Some("union"), RestXml -> "application/xml"
+    Some("union"), RestJson1 -> "application/json"
+    Some("document"), RestJson1 -> "application/json"
+    None, RestXml -> "application/xml"
+    None, RestJson1 -> "application/json"
     _, _ -> panic as "not implemented"
   }
   "
@@ -169,7 +151,7 @@ pub fn operation(operation_name: String) {
     use uri <- decode.parameter
     use code <- decode.parameter
     use input <- decode.parameter
-    Operation("", method, uri, code, input, False, [], "")
+    Operation("", method, uri, code, input, None, [], "")
   })
   |> decode.subfield(
     ["shapes", operation_name, "traits", "smithy.api#http", "method"],

@@ -17,7 +17,7 @@ pub type Operation {
     uri: String,
     code: Option(Int),
     input: String,
-    body: Bool,
+    payload_type: Option(String),
     parameters: List(String),
     path_code: String,
   )

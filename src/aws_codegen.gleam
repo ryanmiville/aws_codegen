@@ -112,22 +112,6 @@ fn print_written(written: Validated) {
   io.println(ansi.green(written.path))
 }
 
-// fn partition(
-//   files: List(File),
-// ) -> #(List(Supported), List(Unsupported), List(Err)) {
-//   list.fold(files, #([], [], []), fn(acc, file) {
-//     let #(s, u, e) = acc
-//     case file.module {
-//       Error(err) -> #(s, u, [Err(file.path, err), ..e])
-//       Ok(module) ->
-//         case supported(module) {
-//           True -> #([Supported(file.path, module), ..s], u, e)
-//           False -> #(s, [Unsupported(file.path, module.protocol), ..u], e)
-//         }
-//     }
-//   })
-// }
-
 type File {
   File(path: String, module: Result(Module, module.Error))
 }
@@ -161,8 +145,12 @@ fn write_module(supported: Validated) {
 }
 
 fn supported(module: Module) -> Bool {
+  let num_ops = case module {
+    module.Rest(_, _, _, _, ops) -> list.length(ops)
+    module.Post(_, _, _, _, ops) -> list.length(ops)
+  }
   case module.protocol {
-    RestXml | RestJson1 | Json10 | Json11 -> True
+    RestXml | RestJson1 | Json10 | Json11 -> num_ops > 0
     _ -> False
   }
 }
