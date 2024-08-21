@@ -188,16 +188,21 @@ fn global_hostname(service: String) {
 const template = "
 CONTENT_TYPE
 
-const endpoint_prefix = \"ENDPOINT_PREFIX\"
-
-const service_id = \"SERVICE_ID\"
-
-const signing_name = \"SIGNING_NAME\"
+const metadata = Metadata(
+  endpoint_prefix: \"ENDPOINT_PREFIX\",
+  service_id: \"SERVICE_ID\",
+  signing_name: \"SIGNING_NAME\",
+  global: GLOBAL,
+)
 
 pub fn new(config: Config) -> Client {
-  CONFIG
-  let endpoint = endpoint.RESOLVE_FN(config, endpoint_prefix)
-  client.Client(config, service_id, signing_name, endpoint)
+  let endpoint = resolve.endpoint(config, metadata)
+  client.Client(
+    config.access_key_id,
+    config.secret_access_key,
+    metadata.service_id,
+    endpoint,
+  )
 }
 
 "
@@ -208,26 +213,18 @@ fn generate_client(module: Module) -> String {
   |> string.replace("ENDPOINT_PREFIX", module.endpoint_prefix)
   |> string.replace("SERVICE_ID", module.service_id)
   |> string.replace("SIGNING_NAME", module.signing_name)
-  |> string.replace("CONFIG", generate_config(module.global))
-  |> string.replace("RESOLVE_FN", generate_resolve_fn(module.global))
+  |> string.replace("GLOBAL", generate_global(module.global))
 }
 
-fn generate_resolve_fn(global: Option(Global)) -> String {
-  case global {
-    Some(_) -> "resolve_global"
-    None -> "resolve"
-  }
-}
-
-fn generate_config(global: Option(Global)) -> String {
+fn generate_global(global: Option(Global)) -> String {
   case global {
     Some(Global(credential_scope, hostname)) ->
-      "let config = config.Config(..config, region: \""
+      "option.Some(metadata.Global(\""
       <> credential_scope
-      <> "\", endpoint: Some(\"https://"
+      <> "\", \""
       <> hostname
       <> "\"))"
-    None -> ""
+    None -> "option.None"
   }
 }
 

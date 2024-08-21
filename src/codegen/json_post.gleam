@@ -9,7 +9,9 @@ pub const imports = "
 import aws/aws
 import aws/client.{type Client}
 import aws/config.{type Config}
-import aws/internal/endpoint
+import aws/internal/resolve
+import aws/metadata.{Metadata}
+import gleam/option
 "
 
 const fn_template = "

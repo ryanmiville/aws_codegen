@@ -8,7 +8,8 @@ import smithy/shape_id.{type ShapeId, ShapeId}
 pub const imports = "
 import aws/client.{type Client}
 import aws/config.{type Config}
-import aws/internal/endpoint
+import aws/internal/resolve
+import aws/metadata.{Metadata}
 import gleam/bit_array
 import gleam/dynamic.{type Dynamic}
 import gleam/http.{type Header}

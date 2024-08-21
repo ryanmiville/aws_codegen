@@ -1,5 +1,5 @@
 import aws/aws
-import aws/config
+import aws/endpoint.{type Endpoint}
 import aws/internal/time
 import gleam/bit_array
 import gleam/bool
@@ -16,10 +16,10 @@ import gleam/string
 
 pub type Client {
   Client(
-    config: config.Config,
+    access_key_id: String,
+    secret_access_key: String,
     service_id: String,
-    signing_name: String,
-    endpoint: String,
+    endpoint: Endpoint,
   )
 }
 
@@ -140,13 +140,13 @@ pub fn post_json(
 ) -> Result(BitArray, aws.Error) {
   let target = client.service_id <> "." <> operation_id
 
-  let assert Ok(request) = request.to(client.endpoint <> "/")
+  let assert Ok(request) = request.to(url(client.endpoint))
 
   let request =
     request.Request(
       ..request,
       headers: [
-        #("host", host(client)),
+        #("host", client.endpoint.hostname),
         #("X-Amz-Target", target),
         #("content-type", content_type),
       ],
@@ -172,10 +172,10 @@ fn sign_v4(client: Client, request: Request(BitArray)) {
   sign(
     request,
     time.utc_now(),
-    client.config.access_key_id,
-    client.config.secret_access_key,
-    client.config.region,
-    client.signing_name,
+    client.access_key_id,
+    client.secret_access_key,
+    client.endpoint.signing_region,
+    client.endpoint.signing_name,
   )
 }
 
@@ -187,8 +187,8 @@ pub fn send(
   query: Option(String),
   body: Option(BitArray),
 ) -> Result(Response(BitArray), Dynamic) {
-  let assert Ok(request) = request.to(client.endpoint <> "/" <> path)
-  let headers = [#("host", host(client)), ..headers]
+  let assert Ok(request) = request.to(url(client.endpoint) <> path)
+  let headers = [#("host", client.endpoint.hostname), ..headers]
 
   let body = option.unwrap(body, bit_array.from_string(""))
   let request =
@@ -200,11 +200,6 @@ pub fn send(
   httpc.send_bits(request)
 }
 
-fn host(client: Client) -> String {
-  case client.endpoint {
-    "http://localhost:8000" -> "localhost"
-    "https://" <> rest -> rest
-    "http://" <> rest -> rest
-    other -> other
-  }
+fn url(endpoint: Endpoint) -> String {
+  endpoint.protocol <> "://" <> endpoint.hostname <> "/"
 }

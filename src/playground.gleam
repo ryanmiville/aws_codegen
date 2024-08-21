@@ -1,5 +1,6 @@
 import aws/config
 import aws/x/service/dynamodb
+
 import aws/x/service/iam
 import aws/x/service/s3
 import dot_env as dot
@@ -10,18 +11,6 @@ import pprint
 
 pub fn main() {
   dot.load()
-
-  let assert Ok(iam_client) =
-    config.new()
-    |> config.with_region("us-east-1")
-    |> config.build
-    |> result.map(iam.new)
-
-  let assert Ok(dynamo_client) =
-    config.new()
-    |> config.with_region("us-east-1")
-    |> config.build
-    |> result.map(dynamodb.new)
 
   let assert Ok(s3_client) =
     config.new()
@@ -40,6 +29,12 @@ pub fn main() {
 
   let _ = pprint.debug(output)
 
+  let assert Ok(iam_client) =
+    config.new()
+    |> config.with_region("us-east-1")
+    |> config.build
+    |> result.map(iam.new)
+
   let body =
     "Action=ListUsers&Version=2010-05-08"
     |> bit_array.from_string
@@ -47,6 +42,12 @@ pub fn main() {
   let output = iam.list_users(iam_client, body, [], None)
 
   let _ = pprint.debug(output)
+
+  let assert Ok(dynamo_client) =
+    config.new()
+    |> config.with_region("us-east-1")
+    |> config.build
+    |> result.map(dynamodb.new)
 
   let body =
     "{
