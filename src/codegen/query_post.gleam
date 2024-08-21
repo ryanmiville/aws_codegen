@@ -9,9 +9,11 @@ pub const imports = "
 import aws/client.{type Client}
 import aws/config.{type Config}
 import aws/internal/endpoint
+import gleam/bit_array
 import gleam/dynamic.{type Dynamic}
 import gleam/http.{type Header}
 import gleam/http/response.{type Response}
+import gleam/int
 import gleam/option.{type Option, Some}
 
 "
@@ -23,7 +25,12 @@ pub fn FUNCTION_NAME(
   headers: List(Header),
   query: Option(String),
 ) -> Result(Response(BitArray), Dynamic) {
-  let headers = [#(\"content-type\", content_type), ..headers]
+  let content_length = bit_array.byte_size(body) |> int.to_string
+  let headers = [
+    #(\"content-type\", content_type),
+    #(\"content-length\", content_length),
+    ..headers
+  ]
   client.send(client, http.Post, \"\", headers, query, Some(body))
 }
 
