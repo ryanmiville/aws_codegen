@@ -23,13 +23,17 @@ pub type Operation {
   )
 }
 
+pub type Global {
+  Global(credential_scope: String, hostname: String)
+}
+
 pub type Module {
   Post(
     service_id: String,
     endpoint_prefix: String,
     signing_name: String,
     protocol: Protocol,
-    global: Bool,
+    global: Option(Global),
     operations: List(String),
   )
   Rest(
@@ -37,7 +41,7 @@ pub type Module {
     endpoint_prefix: String,
     signing_name: String,
     protocol: Protocol,
-    global: Bool,
+    global: Option(Global),
     operations: List(Operation),
   )
 }

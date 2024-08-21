@@ -1,7 +1,7 @@
 import codegen/json_post
 import codegen/module.{
-  type Module, AwsQueryError, Ec2QueryName, Json10, Json11, Post, Rest,
-  RestJson1, RestXml,
+  type Global, type Module, AwsQueryError, Ec2QueryName, Global, Json10, Json11,
+  Post, Rest, RestJson1, RestXml,
 }
 import codegen/query_post
 import codegen/rest
@@ -94,9 +94,19 @@ fn from_service(
     AwsQueryError
   }
 
-  let global =
-    json.decode(endpoint_spec, decode.from(global(endpoint_prefix), _))
-  let assert Ok(global) = global
+  let is_global =
+    json.decode(endpoint_spec, decode.from(is_global(endpoint_prefix), _))
+  let assert Ok(is_global) = is_global
+
+  let global = case is_global {
+    True -> {
+      let global =
+        json.decode(endpoint_spec, decode.from(global(endpoint_prefix), _))
+      let assert Ok(global) = global
+      Some(global)
+    }
+    False -> None
+  }
   case protocol {
     RestXml | RestJson1 -> {
       let assert Ok(ops) = rest.operations(operations, spec)
@@ -123,7 +133,7 @@ fn from_service(
   }
 }
 
-fn global(service: String) {
+fn is_global(service: String) {
   let regionalized =
     decode.at(
       ["services", service, "isRegionalized"],
@@ -136,4 +146,31 @@ fn global(service: String) {
     Some(True) -> False
     None -> False
   }
+}
+
+fn global(service: String) {
+  use cs <- decode.then(global_credential_scope(service))
+  use hn <- decode.map(global_hostname(service))
+  Global(cs, hn)
+}
+
+fn global_credential_scope(service: String) {
+  decode.at(
+    [
+      "services",
+      service,
+      "endpoints",
+      "aws-global",
+      "credentialScope",
+      "region",
+    ],
+    decode.string,
+  )
+}
+
+fn global_hostname(service: String) {
+  decode.at(
+    ["services", service, "endpoints", "aws-global", "hostname"],
+    decode.string,
+  )
 }

@@ -1,6 +1,6 @@
-import codegen/module.{type Module, Post}
-import gleam/bool
+import codegen/module.{type Global, type Module, Global, Post}
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/string
 import internal/stringutils
 import smithy/shape
@@ -23,10 +23,9 @@ const service_id = \"SERVICE_ID\"
 
 const signing_name = \"SIGNING_NAME\"
 
-const global = GLOBAL
-
 pub fn new(config: Config) -> Client {
-  let endpoint = endpoint.resolve(config, endpoint_prefix, global)
+  CONFIG
+  let endpoint = endpoint.RESOLVE_FN(config, endpoint_prefix)
   client.Client(config, service_id, signing_name, endpoint)
 }
 
@@ -60,7 +59,27 @@ fn generate_client(module: Module) -> String {
   |> string.replace("ENDPOINT_PREFIX", module.endpoint_prefix)
   |> string.replace("SERVICE_ID", module.service_id)
   |> string.replace("SIGNING_NAME", module.signing_name)
-  |> string.replace("GLOBAL", bool.to_string(module.global))
+  |> string.replace("CONFIG", generate_config(module.global))
+  |> string.replace("RESOLVE_FN", generate_resolve_fn(module.global))
+}
+
+fn generate_resolve_fn(global: Option(Global)) -> String {
+  case global {
+    Some(_) -> "resolve_global"
+    None -> "resolve"
+  }
+}
+
+fn generate_config(global: Option(Global)) -> String {
+  case global {
+    Some(Global(credential_scope, hostname)) ->
+      "let config = config.Config(..config, region: \""
+      <> credential_scope
+      <> "\", endpoint: Some(\"https://"
+      <> hostname
+      <> "\"))"
+    None -> ""
+  }
 }
 
 fn generate_function(operation_id: String) -> String {

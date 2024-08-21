@@ -4,14 +4,17 @@ import gleam/list
 import gleam/option.{None, Some}
 import gleam/string
 
-pub fn resolve(
-  config: config.Config,
-  endpoint_prefix: String,
-  global: Bool,
-) -> String {
+pub fn resolve(config: config.Config, endpoint_prefix: String) -> String {
   case config.endpoint {
     Some(ep) -> ep
-    None -> do_resolve(config, endpoint_prefix, global)
+    None -> do_resolve(config, endpoint_prefix, False)
+  }
+}
+
+pub fn resolve_global(config: config.Config, endpoint_prefix: String) -> String {
+  case config.endpoint {
+    Some(ep) -> ep
+    None -> do_resolve(config, endpoint_prefix, True)
   }
 }
 

@@ -2,6 +2,7 @@ import codegen/generate
 import codegen/module
 import codegen/parse
 import gleam/list
+import gleam/option.{None}
 import gleam/result
 import gleeunit
 import gleeunit/should
@@ -14,10 +15,11 @@ pub fn main() {
 
 pub fn module_test() {
   let spec = fileio.read_file("./aws-models/dynamodb.json")
+  let endpoint_spec = fileio.read_file("./aws-endpoints/aws-endpoints.json")
   spec
   |> service.from_json
   |> parse.services
-  |> list.map(fn(s) { generate.module(s, spec, "") })
+  |> list.map(fn(s) { generate.module(s, spec, endpoint_spec) })
   |> result.values
   |> should.equal([
     module.Post(
@@ -25,7 +27,7 @@ pub fn module_test() {
       "dynamodb",
       "dynamodb",
       module.Json10,
-      False,
+      None,
       [
         "BatchExecuteStatement", "BatchGetItem", "BatchWriteItem",
         "CreateBackup", "CreateGlobalTable", "CreateTable", "DeleteBackup",
@@ -55,10 +57,11 @@ pub fn module_test() {
 
 pub fn generate_test() {
   let spec = fileio.read_file("./aws-models/dynamodb.json")
+  let endpoint_spec = fileio.read_file("./aws-endpoints/aws-endpoints.json")
   spec
   |> service.from_json
   |> parse.services
-  |> list.map(fn(s) { generate.module(s, spec, "") })
+  |> list.map(fn(s) { generate.module(s, spec, endpoint_spec) })
   |> result.values
   |> list.map(generate.code)
   |> list.length
