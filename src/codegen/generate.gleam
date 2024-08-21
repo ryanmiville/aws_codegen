@@ -1,7 +1,7 @@
 import codegen/json_post
 import codegen/module.{
-  type Global, type Module, AwsQueryError, Ec2QueryName, Global, Json10, Json11,
-  Post, Rest, RestJson1, RestXml,
+  type Global, type Module, type Protocol, AwsQueryError, Ec2QueryName, Global,
+  Json10, Json11, Post, Rest, RestJson1, RestXml,
 }
 import codegen/query_post
 import codegen/rest
@@ -30,9 +30,19 @@ pub fn module(
 
 pub fn code(module: Module) -> String {
   case module.protocol {
-    Json10 | Json11 -> json_post.generate(module)
-    RestXml | RestJson1 -> rest.generate(module)
-    Ec2QueryName | AwsQueryError -> query_post.generate(module)
+    Json10 | Json11 -> {
+      json_post.imports
+      <> generate_client(module)
+      <> json_post.generate_functions(module)
+    }
+    RestXml | RestJson1 -> {
+      rest.imports <> generate_client(module) <> rest.generate_functions(module)
+    }
+    Ec2QueryName | AwsQueryError -> {
+      query_post.imports
+      <> generate_client(module)
+      <> query_post.generate_functions(module)
+    }
   }
 }
 
@@ -173,4 +183,60 @@ fn global_hostname(service: String) {
     ["services", service, "endpoints", "aws-global", "hostname"],
     decode.string,
   )
+}
+
+const template = "
+CONTENT_TYPE
+
+const endpoint_prefix = \"ENDPOINT_PREFIX\"
+
+const service_id = \"SERVICE_ID\"
+
+const signing_name = \"SIGNING_NAME\"
+
+pub fn new(config: Config) -> Client {
+  CONFIG
+  let endpoint = endpoint.RESOLVE_FN(config, endpoint_prefix)
+  client.Client(config, service_id, signing_name, endpoint)
+}
+
+"
+
+fn generate_client(module: Module) -> String {
+  template
+  |> string.replace("CONTENT_TYPE", generate_content_type(module.protocol))
+  |> string.replace("ENDPOINT_PREFIX", module.endpoint_prefix)
+  |> string.replace("SERVICE_ID", module.service_id)
+  |> string.replace("SIGNING_NAME", module.signing_name)
+  |> string.replace("CONFIG", generate_config(module.global))
+  |> string.replace("RESOLVE_FN", generate_resolve_fn(module.global))
+}
+
+fn generate_resolve_fn(global: Option(Global)) -> String {
+  case global {
+    Some(_) -> "resolve_global"
+    None -> "resolve"
+  }
+}
+
+fn generate_config(global: Option(Global)) -> String {
+  case global {
+    Some(Global(credential_scope, hostname)) ->
+      "let config = config.Config(..config, region: \""
+      <> credential_scope
+      <> "\", endpoint: Some(\"https://"
+      <> hostname
+      <> "\"))"
+    None -> ""
+  }
+}
+
+fn generate_content_type(protocol: Protocol) -> String {
+  case protocol {
+    module.Json10 -> "const content_type = \"application/x-amz-json-1.0\""
+    module.Json11 -> "const content_type = \"application/x-amz-json-1.1\""
+    module.RestJson1 | module.RestXml -> ""
+    module.AwsQueryError | module.Ec2QueryName ->
+      "const content_type = \"application/x-www-form-urlencoded\""
+  }
 }

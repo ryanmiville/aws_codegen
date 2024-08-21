@@ -30,16 +30,6 @@ pub fn main() {
     |> config.build
     |> result.map(s3.new)
 
-  let body =
-    "{
-    \"TableName\": \"doorman-production-WaitlistTable\",
-    \"Key\": { \"email\": { \"S\": \"ryanmiville@gmail.com\" } }
-    }"
-    |> bit_array.from_string
-
-  let output = dynamodb.get_item(dynamo_client, body)
-  let _ = pprint.debug(output)
-
   let output =
     s3.get_object(
       s3_client,
@@ -59,5 +49,15 @@ pub fn main() {
   let headers = [#("content-length", int.to_string(length))]
   let output = iam.list_users(iam_client, body, headers, None)
 
-  pprint.debug(output)
+  let _ = pprint.debug(output)
+
+  let body =
+    "{
+    \"TableName\": \"doorman-production-WaitlistTable\",
+    \"Key\": { \"email\": { \"S\": \"ryanmiville@gmail.com\" } }
+    }"
+    |> bit_array.from_string
+
+  let output = dynamodb.get_item(dynamo_client, body)
+  let _ = pprint.debug(output)
 }

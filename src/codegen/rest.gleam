@@ -1,6 +1,6 @@
 import codegen/module.{
-  type Global, type Module, type Operation, type Protocol, Global, Operation,
-  Rest, RestJson1, RestXml,
+  type Module, type Operation, type Protocol, Operation, Rest, RestJson1,
+  RestXml,
 }
 import codegen/operation
 import decode
@@ -17,7 +17,7 @@ fn get_operation(operation_name: ShapeId, spec: String) {
   operation.get_operation(operation_name, spec)
 }
 
-const template = "
+pub const imports = "
 import aws/client.{type Client}
 import aws/config.{type Config}
 import aws/internal/endpoint
@@ -26,19 +26,6 @@ import gleam/http.{type Header}
 import gleam/http/response.{type Response}
 import gleam/option.{type Option}
 import gleam/string
-
-const endpoint_prefix = \"ENDPOINT_PREFIX\"
-
-const service_id = \"SERVICE_ID\"
-
-const signing_name = \"SIGNING_NAME\"
-
-pub fn new(config: Config) -> Client {
-  CONFIG
-  let endpoint = endpoint.RESOLVE_FN(config, endpoint_prefix)
-  client.Client(config, service_id, signing_name, endpoint)
-}
-
 "
 
 const fn_template = "
@@ -55,42 +42,11 @@ pub fn FUNCTION_NAME(
 
 "
 
-pub fn generate(module: Module) -> String {
+pub fn generate_functions(module: Module) -> String {
   let assert Rest(_, _, _, _, _, operations) = module
-  let functions =
-    operations
-    |> list.map(fn(op) { generate_function(op, module.protocol) })
-    |> string.concat
-
-  generate_client(module) <> functions
-}
-
-fn generate_client(module: Module) -> String {
-  template
-  |> string.replace("ENDPOINT_PREFIX", module.endpoint_prefix)
-  |> string.replace("SERVICE_ID", module.service_id)
-  |> string.replace("SIGNING_NAME", module.signing_name)
-  |> string.replace("CONFIG", generate_config(module.global))
-  |> string.replace("RESOLVE_FN", generate_resolve_fn(module.global))
-}
-
-fn generate_resolve_fn(global: Option(Global)) -> String {
-  case global {
-    Some(_) -> "resolve_global"
-    None -> "resolve"
-  }
-}
-
-fn generate_config(global: Option(Global)) -> String {
-  case global {
-    Some(Global(credential_scope, hostname)) ->
-      "let config = config.Config(..config, region: \""
-      <> credential_scope
-      <> "\", endpoint: Some(\"https://"
-      <> hostname
-      <> "\"))"
-    None -> ""
-  }
+  operations
+  |> list.map(fn(op) { generate_function(op, module.protocol) })
+  |> string.concat
 }
 
 fn generate_function(operation: Operation, protocol: Protocol) -> String {

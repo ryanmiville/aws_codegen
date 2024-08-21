@@ -1,42 +1,15 @@
-import codegen/module.{type Global, type Module, type Protocol, Global, Post}
+import codegen/module.{type Module, Post}
 import gleam/list
-import gleam/option.{type Option, None, Some}
 import gleam/string
 import internal/stringutils
 import smithy/shape
 import smithy/shape_id.{type ShapeId, ShapeId}
 
-fn content_type(protocol: Protocol) -> String {
-  case protocol {
-    module.Json10 -> "application/x-amz-json-1.0"
-    module.Json11 -> "application/x-amz-json-1.1"
-    module.RestJson1 -> panic as "not implemented"
-    module.RestXml -> panic as "not implemented"
-    module.Ec2QueryName -> panic as "not implemented"
-    module.AwsQueryError -> panic as "not implemented"
-  }
-}
-
-const template = "
+pub const imports = "
 import aws/aws
 import aws/client.{type Client}
 import aws/config.{type Config}
 import aws/internal/endpoint
-
-const content_type = \"CONTENT_TYPE\"
-
-const endpoint_prefix = \"ENDPOINT_PREFIX\"
-
-const service_id = \"SERVICE_ID\"
-
-const signing_name = \"SIGNING_NAME\"
-
-pub fn new(config: Config) -> Client {
-  CONFIG
-  let endpoint = endpoint.RESOLVE_FN(config, endpoint_prefix)
-  client.Client(config, service_id, signing_name, endpoint)
-}
-
 "
 
 const fn_template = "
@@ -49,43 +22,11 @@ pub fn FUNCTION_NAME(
 
 "
 
-pub fn generate(module: Module) -> String {
+pub fn generate_functions(module: Module) -> String {
   let assert Post(_, _, _, _, _, operations) = module
-  let functions =
-    operations
-    |> list.map(generate_function)
-    |> string.concat
-
-  generate_client(module) <> functions
-}
-
-fn generate_client(module: Module) -> String {
-  template
-  |> string.replace("CONTENT_TYPE", content_type(module.protocol))
-  |> string.replace("ENDPOINT_PREFIX", module.endpoint_prefix)
-  |> string.replace("SERVICE_ID", module.service_id)
-  |> string.replace("SIGNING_NAME", module.signing_name)
-  |> string.replace("CONFIG", generate_config(module.global))
-  |> string.replace("RESOLVE_FN", generate_resolve_fn(module.global))
-}
-
-fn generate_resolve_fn(global: Option(Global)) -> String {
-  case global {
-    Some(_) -> "resolve_global"
-    None -> "resolve"
-  }
-}
-
-fn generate_config(global: Option(Global)) -> String {
-  case global {
-    Some(Global(credential_scope, hostname)) ->
-      "let config = config.Config(..config, region: \""
-      <> credential_scope
-      <> "\", endpoint: Some(\"https://"
-      <> hostname
-      <> "\"))"
-    None -> ""
-  }
+  operations
+  |> list.map(generate_function)
+  |> string.concat
 }
 
 fn generate_function(operation_id: String) -> String {
