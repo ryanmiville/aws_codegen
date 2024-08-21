@@ -1,4 +1,5 @@
 import codegen/module.{type Module, Post}
+import gleam/bool
 import gleam/list
 import gleam/string
 import internal/stringutils
@@ -14,7 +15,7 @@ import gleam/http.{type Header}
 import gleam/http/response.{type Response}
 import gleam/option.{type Option, Some}
 
-const content_type = \"application/x-www-form-url-encoded\"
+const content_type = \"application/x-www-form-urlencoded\"
 
 const endpoint_prefix = \"ENDPOINT_PREFIX\"
 
@@ -22,8 +23,10 @@ const service_id = \"SERVICE_ID\"
 
 const signing_name = \"SIGNING_NAME\"
 
+const global = GLOBAL
+
 pub fn new(config: Config) -> Client {
-  let endpoint = endpoint.resolve(config, endpoint_prefix)
+  let endpoint = endpoint.resolve(config, endpoint_prefix, global)
   client.Client(config, service_id, signing_name, endpoint)
 }
 
@@ -43,7 +46,7 @@ pub fn FUNCTION_NAME(
 "
 
 pub fn generate(module: Module) -> String {
-  let assert Post(_, _, _, _, operations) = module
+  let assert Post(_, _, _, _, _, operations) = module
   let functions =
     operations
     |> list.map(generate_function)
@@ -57,6 +60,7 @@ fn generate_client(module: Module) -> String {
   |> string.replace("ENDPOINT_PREFIX", module.endpoint_prefix)
   |> string.replace("SERVICE_ID", module.service_id)
   |> string.replace("SIGNING_NAME", module.signing_name)
+  |> string.replace("GLOBAL", bool.to_string(module.global))
 }
 
 fn generate_function(operation_id: String) -> String {

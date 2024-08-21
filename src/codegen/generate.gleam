@@ -5,9 +5,11 @@ import codegen/module.{
 }
 import codegen/query_post
 import codegen/rest
+import decode
 import gleam/bool
 import gleam/dict.{type Dict}
-import gleam/option.{type Option, Some}
+import gleam/json
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
 import smithy/shape
@@ -17,11 +19,12 @@ import smithy/trait.{type Trait}
 pub fn module(
   tuple: #(shape_id.ShapeId, shape.Shape),
   spec: String,
+  endpoint_spec: String,
 ) -> Result(Module, module.Error) {
   let #(id, shape) = tuple
   let assert shape.Service(_, operations, _, _, traits) = shape
   let error = module.Error(id, _)
-  from_service(id, operations, traits, spec)
+  from_service(id, operations, traits, spec, endpoint_spec)
   |> result.map_error(error)
 }
 
@@ -48,6 +51,7 @@ fn from_service(
   operations: List(shape.Reference),
   traits: Dict(ShapeId, Option(Trait)),
   spec: String,
+  endpoint_spec: String,
 ) -> Result(Module, String) {
   let shape_id.ShapeId(service_id) = shape_id
   let service_id = strip_prefix(service_id)
@@ -90,10 +94,13 @@ fn from_service(
     AwsQueryError
   }
 
+  let global =
+    json.decode(endpoint_spec, decode.from(global(endpoint_prefix), _))
+  let assert Ok(global) = global
   case protocol {
     RestXml | RestJson1 -> {
       let assert Ok(ops) = rest.operations(operations, spec)
-      Ok(Rest(service_id, endpoint_prefix, signing_name, protocol, ops))
+      Ok(Rest(service_id, endpoint_prefix, signing_name, protocol, global, ops))
     }
     Json10 | Json11 ->
       Ok(Post(
@@ -101,6 +108,7 @@ fn from_service(
         endpoint_prefix,
         signing_name,
         protocol,
+        global,
         json_post.operations(operations),
       ))
     Ec2QueryName | AwsQueryError ->
@@ -109,7 +117,23 @@ fn from_service(
         endpoint_prefix,
         signing_name,
         protocol,
+        global,
         query_post.operations(operations),
       ))
+  }
+}
+
+fn global(service: String) {
+  let regionalized =
+    decode.at(
+      ["services", service, "isRegionalized"],
+      decode.optional(decode.bool),
+    )
+
+  use r <- decode.map(regionalized)
+  case r {
+    Some(False) -> True
+    Some(True) -> False
+    None -> False
   }
 }

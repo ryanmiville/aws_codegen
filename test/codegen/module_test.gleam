@@ -17,31 +17,39 @@ pub fn module_test() {
   spec
   |> service.from_json
   |> parse.services
-  |> list.map(fn(s) { generate.module(s, spec) })
+  |> list.map(fn(s) { generate.module(s, spec, "") })
   |> result.values
   |> should.equal([
-    module.Post("DynamoDB_20120810", "dynamodb", "dynamodb", module.Json10, [
-      "BatchExecuteStatement", "BatchGetItem", "BatchWriteItem", "CreateBackup",
-      "CreateGlobalTable", "CreateTable", "DeleteBackup", "DeleteItem",
-      "DeleteResourcePolicy", "DeleteTable", "DescribeBackup",
-      "DescribeContinuousBackups", "DescribeContributorInsights",
-      "DescribeEndpoints", "DescribeExport", "DescribeGlobalTable",
-      "DescribeGlobalTableSettings", "DescribeImport",
-      "DescribeKinesisStreamingDestination", "DescribeLimits", "DescribeTable",
-      "DescribeTableReplicaAutoScaling", "DescribeTimeToLive",
-      "DisableKinesisStreamingDestination", "EnableKinesisStreamingDestination",
-      "ExecuteStatement", "ExecuteTransaction", "ExportTableToPointInTime",
-      "GetItem", "GetResourcePolicy", "ImportTable", "ListBackups",
-      "ListContributorInsights", "ListExports", "ListGlobalTables",
-      "ListImports", "ListTables", "ListTagsOfResource", "PutItem",
-      "PutResourcePolicy", "Query", "RestoreTableFromBackup",
-      "RestoreTableToPointInTime", "Scan", "TagResource", "TransactGetItems",
-      "TransactWriteItems", "UntagResource", "UpdateContinuousBackups",
-      "UpdateContributorInsights", "UpdateGlobalTable",
-      "UpdateGlobalTableSettings", "UpdateItem",
-      "UpdateKinesisStreamingDestination", "UpdateTable",
-      "UpdateTableReplicaAutoScaling", "UpdateTimeToLive",
-    ]),
+    module.Post(
+      "DynamoDB_20120810",
+      "dynamodb",
+      "dynamodb",
+      module.Json10,
+      False,
+      [
+        "BatchExecuteStatement", "BatchGetItem", "BatchWriteItem",
+        "CreateBackup", "CreateGlobalTable", "CreateTable", "DeleteBackup",
+        "DeleteItem", "DeleteResourcePolicy", "DeleteTable", "DescribeBackup",
+        "DescribeContinuousBackups", "DescribeContributorInsights",
+        "DescribeEndpoints", "DescribeExport", "DescribeGlobalTable",
+        "DescribeGlobalTableSettings", "DescribeImport",
+        "DescribeKinesisStreamingDestination", "DescribeLimits", "DescribeTable",
+        "DescribeTableReplicaAutoScaling", "DescribeTimeToLive",
+        "DisableKinesisStreamingDestination",
+        "EnableKinesisStreamingDestination", "ExecuteStatement",
+        "ExecuteTransaction", "ExportTableToPointInTime", "GetItem",
+        "GetResourcePolicy", "ImportTable", "ListBackups",
+        "ListContributorInsights", "ListExports", "ListGlobalTables",
+        "ListImports", "ListTables", "ListTagsOfResource", "PutItem",
+        "PutResourcePolicy", "Query", "RestoreTableFromBackup",
+        "RestoreTableToPointInTime", "Scan", "TagResource", "TransactGetItems",
+        "TransactWriteItems", "UntagResource", "UpdateContinuousBackups",
+        "UpdateContributorInsights", "UpdateGlobalTable",
+        "UpdateGlobalTableSettings", "UpdateItem",
+        "UpdateKinesisStreamingDestination", "UpdateTable",
+        "UpdateTableReplicaAutoScaling", "UpdateTimeToLive",
+      ],
+    ),
   ])
 }
 
@@ -50,7 +58,7 @@ pub fn generate_test() {
   spec
   |> service.from_json
   |> parse.services
-  |> list.map(fn(s) { generate.module(s, spec) })
+  |> list.map(fn(s) { generate.module(s, spec, "") })
   |> result.values
   |> list.map(generate.code)
   |> list.length

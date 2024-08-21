@@ -29,6 +29,7 @@ pub type Module {
     endpoint_prefix: String,
     signing_name: String,
     protocol: Protocol,
+    global: Bool,
     operations: List(String),
   )
   Rest(
@@ -36,6 +37,7 @@ pub type Module {
     endpoint_prefix: String,
     signing_name: String,
     protocol: Protocol,
+    global: Bool,
     operations: List(Operation),
   )
 }

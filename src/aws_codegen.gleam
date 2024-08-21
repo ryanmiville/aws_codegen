@@ -46,7 +46,11 @@ fn run(filepaths: List(String)) {
 }
 
 fn run_tasks(filepaths: List(String)) -> List(Result(Validated, Err)) {
-  let tasks = list.map(filepaths, fn(fp) { task.async(fn() { run_file(fp) }) })
+  let endpoint_spec = fileio.read_file("./aws-endpoints/aws-endpoints.json")
+  let tasks =
+    list.map(filepaths, fn(fp) {
+      task.async(fn() { run_file(fp, endpoint_spec) })
+    })
   let results = list.map(tasks, task.await_forever)
   use res <- list.map(results)
   use res <- result.map(res)
@@ -58,8 +62,8 @@ fn run_tasks(filepaths: List(String)) -> List(Result(Validated, Err)) {
   }
 }
 
-fn run_file(filepath: String) -> Result(Validated, Err) {
-  let file = file(filepath)
+fn run_file(filepath: String, endpoint_spec: String) -> Result(Validated, Err) {
+  let file = file(filepath, endpoint_spec)
   let module = file.module |> result.map_error(fn(err) { Err(filepath, err) })
   use module <- result.try(module)
   case supported(module) {
@@ -126,14 +130,14 @@ type Err {
   Err(path: String, error: module.Error)
 }
 
-fn file(filepath: String) {
+fn file(filepath: String, endpoint_spec: String) {
   io.println(ansi.dim("parsing " <> filepath <> "..."))
   let spec = fileio.read_file(filepath)
   let assert [service] =
     service.from_json(spec)
     |> parse.services
 
-  File(filepath, generate.module(service, spec))
+  File(filepath, generate.module(service, spec, endpoint_spec))
 }
 
 fn write_module(supported: Validated) {
@@ -146,8 +150,8 @@ fn write_module(supported: Validated) {
 
 fn supported(module: Module) -> Bool {
   let num_ops = case module {
-    module.Rest(_, _, _, _, ops) -> list.length(ops)
-    module.Post(_, _, _, _, ops) -> list.length(ops)
+    module.Rest(_, _, _, _, _, ops) -> list.length(ops)
+    module.Post(_, _, _, _, _, ops) -> list.length(ops)
   }
   num_ops > 0
 }
