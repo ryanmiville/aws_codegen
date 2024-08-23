@@ -5,6 +5,7 @@ import aws/x/service/iam
 import aws/x/service/s3
 import dot_env as dot
 import gleam/bit_array
+import gleam/httpc
 import gleam/option.{None}
 import gleam/result
 import pprint
@@ -26,6 +27,7 @@ pub fn main() {
       [],
       None,
     )
+    |> httpc.send_bits
 
   let _ = pprint.debug(output)
 
@@ -39,7 +41,9 @@ pub fn main() {
     "Action=ListUsers&Version=2010-05-08"
     |> bit_array.from_string
 
-  let output = iam.list_users(iam_client, body, [], None)
+  let output =
+    iam.list_users(iam_client, body, [], None)
+    |> httpc.send_bits
 
   let _ = pprint.debug(output)
 
@@ -56,6 +60,9 @@ pub fn main() {
     }"
     |> bit_array.from_string
 
-  let output = dynamodb.get_item(dynamo_client, body)
+  let output =
+    dynamodb.get_item(dynamo_client, body)
+    |> httpc.send_bits
+
   let _ = pprint.debug(output)
 }

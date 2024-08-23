@@ -1,14 +1,9 @@
-import aws/aws
 import aws/endpoint.{type Endpoint}
 import aws/internal/time
 import gleam/bit_array
-import gleam/bool
 import gleam/crypto
-import gleam/dynamic.{type Dynamic}
 import gleam/http.{type Header}
 import gleam/http/request.{type Request, Request}
-import gleam/http/response.{type Response}
-import gleam/httpc
 import gleam/int
 import gleam/list
 import gleam/option.{type Option}
@@ -132,42 +127,6 @@ pub fn sign(
   Request(..request, headers: headers)
 }
 
-pub fn post_json(
-  client: Client,
-  operation_id: String,
-  body: BitArray,
-  content_type: String,
-) -> Result(BitArray, aws.Error) {
-  let target = client.service_id <> "." <> operation_id
-
-  let assert Ok(request) = request.to(url(client.endpoint))
-
-  let request =
-    request.Request(
-      ..request,
-      headers: [
-        #("host", client.endpoint.hostname),
-        #("X-Amz-Target", target),
-        #("content-type", content_type),
-      ],
-    )
-    |> request.set_method(http.Post)
-    |> request.set_body(body)
-
-  let request = sign_v4(client, request)
-
-  let response = httpc.send_bits(request)
-
-  case response {
-    Ok(resp) -> {
-      use <- bool.guard(resp.status == 200, Ok(resp.body))
-      let assert Ok(body) = bit_array.to_string(resp.body)
-      Error(aws.ServiceError(body))
-    }
-    Error(dyn) -> Error(aws.UnknownError(string.inspect(dyn)))
-  }
-}
-
 fn sign_v4(client: Client, request: Request(BitArray)) {
   sign(
     request,
@@ -179,14 +138,14 @@ fn sign_v4(client: Client, request: Request(BitArray)) {
   )
 }
 
-pub fn send(
+pub fn request(
   client: Client,
   method: http.Method,
   path: String,
   headers: List(Header),
   query: Option(String),
   body: Option(BitArray),
-) -> Result(Response(BitArray), Dynamic) {
+) -> Request(BitArray) {
   let assert Ok(request) = request.to(url(client.endpoint) <> path)
   let headers = [#("host", client.endpoint.hostname), ..headers]
 
@@ -196,8 +155,7 @@ pub fn send(
     |> request.set_method(method)
     |> request.set_body(body)
 
-  let request = sign_v4(client, request)
-  httpc.send_bits(request)
+  sign_v4(client, request)
 }
 
 fn url(endpoint: Endpoint) -> String {

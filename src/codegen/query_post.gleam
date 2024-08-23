@@ -11,9 +11,8 @@ import aws/config.{type Config}
 import aws/internal/resolve
 import aws/metadata.{Metadata}
 import gleam/bit_array
-import gleam/dynamic.{type Dynamic}
 import gleam/http.{type Header}
-import gleam/http/response.{type Response}
+import gleam/http/request.{type Request}
 import gleam/int
 import gleam/option.{type Option, Some}
 
@@ -25,14 +24,14 @@ pub fn FUNCTION_NAME(
   body: BitArray,
   headers: List(Header),
   query: Option(String),
-) -> Result(Response(BitArray), Dynamic) {
+) -> Request(BitArray) {
   let content_length = bit_array.byte_size(body) |> int.to_string
   let headers = [
     #(\"content-type\", content_type),
     #(\"content-length\", content_length),
     ..headers
   ]
-  client.send(client, http.Post, \"\", headers, query, Some(body))
+  client.request(client, http.Post, \"\", headers, query, Some(body))
 }
 
 "

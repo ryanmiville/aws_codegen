@@ -22,9 +22,8 @@ import aws/client.{type Client}
 import aws/config.{type Config}
 import aws/internal/resolve
 import aws/metadata.{Metadata}
-import gleam/dynamic.{type Dynamic}
 import gleam/http.{type Header}
-import gleam/http/response.{type Response}
+import gleam/http/request.{type Request}
 import gleam/option.{type Option}
 import gleam/string
 "
@@ -35,10 +34,10 @@ pub fn FUNCTION_NAME(
   PARAMS
   headers: List(Header),
   query: Option(String),
-) -> Result(Response(BitArray), Dynamic) {
+) -> Request(BitArray) {
   PATH
   CONTENT_TYPE
-  client.send(client, METHOD, path, headers, query, BODY_OPTION)
+  client.request(client, METHOD, path, headers, query, BODY_OPTION)
 }
 
 "
