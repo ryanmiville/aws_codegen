@@ -106,7 +106,7 @@ fn from_service(
 
   let is_global =
     json.decode(endpoint_spec, decode.from(is_global(endpoint_prefix), _))
-  let assert Ok(is_global) = is_global
+  let is_global = result.unwrap(is_global, False)
 
   let global = case is_global {
     True -> {
