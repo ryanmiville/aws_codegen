@@ -2,8 +2,6 @@ import dot_env/env
 import gleam/option.{type Option, None}
 import gleam/result
 
-pub const aws_default_endpoint = "amazonaws.com"
-
 const aws_access_key_id = "AWS_ACCESS_KEY_ID"
 
 const aws_secret_access_key = "AWS_SECRET_ACCESS_KEY"

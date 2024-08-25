@@ -1,4 +1,4 @@
-import aws/endpoint.{type Endpoint}
+import aws/internal/endpoint.{type Endpoint}
 import aws/internal/time
 import gleam/bit_array
 import gleam/crypto

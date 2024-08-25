@@ -200,7 +200,7 @@ pub opaque type Client {
 }
 
 pub fn new(config: Config) -> Client {
-  let endpoint = resolve.endpoint(config, metadata)
+  let endpoint = endpoint.from(config, metadata)
   RequestBuilder(
     config.access_key_id,
     config.secret_access_key,

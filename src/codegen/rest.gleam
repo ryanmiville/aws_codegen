@@ -19,9 +19,9 @@ fn get_operation(operation_name: ShapeId, spec: String) {
 
 pub const imports = "
 import aws/config.{type Config}
-import aws/internal/resolve
-import aws/metadata.{Metadata}
-import aws/request_builder.{type RequestBuilder, RequestBuilder}
+import aws/internal/endpoint
+import aws/internal/metadata.{Metadata}
+import aws/internal/request_builder.{type RequestBuilder, RequestBuilder}
 import gleam/http.{type Header}
 import gleam/http/request.{type Request}
 import gleam/option.{type Option}
