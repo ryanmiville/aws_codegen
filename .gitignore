@@ -6,4 +6,5 @@ erl_crash.dump
 src/aws/service
 src/aws/x/service
 test/aws/service/endpoint_test.gleam
+playground.gleam
 .DS_Store
