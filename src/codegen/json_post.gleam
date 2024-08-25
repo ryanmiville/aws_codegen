@@ -6,10 +6,10 @@ import smithy/shape
 import smithy/shape_id.{type ShapeId, ShapeId}
 
 pub const imports = "
-import aws/client.{type Client}
 import aws/config.{type Config}
 import aws/internal/resolve
 import aws/metadata.{Metadata}
+import aws/request_builder.{type RequestBuilder, RequestBuilder}
 import gleam/http
 import gleam/http/request.{type Request}
 import gleam/option.{None, Some}
@@ -20,9 +20,9 @@ pub fn FUNCTION_NAME(
   client: Client,
   request_body: BitArray,
 ) -> Request(BitArray) {
-  let target = client.service_id <> \".OPERATION_ID\"
+  let target = client.builder.service_id <> \".OPERATION_ID\"
   let headers = [#(\"X-Amz-Target\", target), #(\"content-type\", content_type)]
-  client.request(client, http.Post, \"\", headers, None, Some(request_body))
+  request_builder.build(client.builder, http.Post, \"\", headers, None, Some(request_body))
 }
 
 "

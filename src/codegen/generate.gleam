@@ -195,14 +195,19 @@ const metadata = Metadata(
   global: GLOBAL,
 )
 
+pub opaque type Client {
+  Client(builder: RequestBuilder)
+}
+
 pub fn new(config: Config) -> Client {
   let endpoint = resolve.endpoint(config, metadata)
-  client.Client(
+  RequestBuilder(
     config.access_key_id,
     config.secret_access_key,
     metadata.service_id,
     endpoint,
   )
+  |> Client
 }
 
 "

@@ -9,8 +9,8 @@ import gleam/list
 import gleam/option.{type Option}
 import gleam/string
 
-pub type Client {
-  Client(
+pub type RequestBuilder {
+  RequestBuilder(
     access_key_id: String,
     secret_access_key: String,
     service_id: String,
@@ -18,7 +18,7 @@ pub type Client {
   )
 }
 
-pub fn sign(
+fn sign(
   request request: Request(BitArray),
   time time: time.Time,
   access_key_id access_key_id: String,
@@ -127,27 +127,27 @@ pub fn sign(
   Request(..request, headers: headers)
 }
 
-fn sign_v4(client: Client, request: Request(BitArray)) {
+fn sign_v4(builder: RequestBuilder, request: Request(BitArray)) {
   sign(
     request,
     time.utc_now(),
-    client.access_key_id,
-    client.secret_access_key,
-    client.endpoint.signing_region,
-    client.endpoint.signing_name,
+    builder.access_key_id,
+    builder.secret_access_key,
+    builder.endpoint.signing_region,
+    builder.endpoint.signing_name,
   )
 }
 
-pub fn request(
-  client: Client,
+pub fn build(
+  builder: RequestBuilder,
   method: http.Method,
   path: String,
   headers: List(Header),
   query: Option(String),
   body: Option(BitArray),
 ) -> Request(BitArray) {
-  let assert Ok(request) = request.to(url(client.endpoint) <> path)
-  let headers = [#("host", client.endpoint.hostname), ..headers]
+  let assert Ok(request) = request.to(url(builder.endpoint) <> path)
+  let headers = [#("host", builder.endpoint.hostname), ..headers]
 
   let body = option.unwrap(body, bit_array.from_string(""))
   let request =
@@ -155,7 +155,7 @@ pub fn request(
     |> request.set_method(method)
     |> request.set_body(body)
 
-  sign_v4(client, request)
+  sign_v4(builder, request)
 }
 
 fn url(endpoint: Endpoint) -> String {
