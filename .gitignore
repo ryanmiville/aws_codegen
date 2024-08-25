@@ -3,8 +3,6 @@
 /build
 erl_crash.dump
 .env
-src/aws/service
-src/aws/x/service
-test/aws/service/endpoint_test.gleam
+src/aws_request/service
 playground.gleam
 .DS_Store

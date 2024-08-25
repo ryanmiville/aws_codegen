@@ -6,10 +6,10 @@ import smithy/shape
 import smithy/shape_id.{type ShapeId, ShapeId}
 
 pub const imports = "
-import aws/config.{type Config}
-import aws/internal/endpoint
-import aws/internal/metadata.{Metadata}
-import aws/internal/request_builder.{type RequestBuilder, RequestBuilder}
+import aws_request/config.{type Config}
+import aws_request/internal/endpoint
+import aws_request/internal/metadata.{Metadata}
+import aws_request/internal/request_builder.{type RequestBuilder, RequestBuilder}
 import gleam/http
 import gleam/http/request.{type Request}
 import gleam/option.{None, Some}

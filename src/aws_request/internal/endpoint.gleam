@@ -1,5 +1,5 @@
-import aws/config.{type Config}
-import aws/internal/metadata.{type Metadata, Global}
+import aws_request/config.{type Config}
+import aws_request/internal/metadata.{type Metadata, Global}
 import gleam/option.{None, Some}
 import gleam/string
 

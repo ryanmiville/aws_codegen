@@ -1,5 +1,5 @@
-import aws/internal/endpoint.{type Endpoint}
-import aws/internal/time
+import aws_request/internal/endpoint.{type Endpoint}
+import aws_request/internal/time
 import gleam/bit_array
 import gleam/crypto
 import gleam/http.{type Header}
