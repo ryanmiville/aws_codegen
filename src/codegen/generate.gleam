@@ -106,17 +106,20 @@ fn from_service(
 
   let is_global =
     json.decode(endpoint_spec, decode.from(is_global(endpoint_prefix), _))
-  let is_global = result.unwrap(is_global, False)
+    |> result.replace_error("corresponding endpoint not found")
+
+  use is_global <- result.then(is_global)
 
   let global = case is_global {
     True -> {
-      let global =
-        json.decode(endpoint_spec, decode.from(global(endpoint_prefix), _))
-      let assert Ok(global) = global
-      Some(global)
+      json.decode(endpoint_spec, decode.from(global(endpoint_prefix), _))
+      |> result.replace_error("could not find aws-global endpoint")
+      |> result.map(Some)
     }
-    False -> None
+    False -> Ok(None)
   }
+  use global <- result.then(global)
+
   case protocol {
     RestXml | RestJson1 -> {
       let assert Ok(ops) = rest.operations(operations, spec)
