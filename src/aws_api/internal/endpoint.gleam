@@ -1,5 +1,5 @@
 import aws4_request.{type Signer, Signer}
-import aws_request/internal/metadata.{type Metadata, Global}
+import aws_api/internal/metadata.{type Metadata, Global}
 import gleam/option.{None, Some}
 import gleam/string
 

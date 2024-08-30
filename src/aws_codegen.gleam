@@ -157,7 +157,7 @@ fn supported(module: Module) -> Bool {
 }
 
 fn do_write_module(filename: String, module: Module) {
-  let filepath = "./src/aws_request/service/" <> filename <> ".gleam"
+  let filepath = "./src/aws_api/service/" <> filename <> ".gleam"
   let contents = generate.code(module)
   fileio.write_file(filepath, contents)
   Written(filepath, module)
