@@ -6,10 +6,10 @@ import smithy/shape
 import smithy/shape_id.{type ShapeId, ShapeId}
 
 pub const imports = "
-import aws_request/config.{type Config}
+import aws4_request.{type Signer}
 import aws_request/internal/endpoint
 import aws_request/internal/metadata.{Metadata}
-import aws_request/internal/request_builder.{type RequestBuilder, RequestBuilder}
+import aws_request/internal/request_builder
 import gleam/bit_array
 import gleam/http.{type Header}
 import gleam/http/request.{type Request}
@@ -31,7 +31,15 @@ pub fn FUNCTION_NAME(
     #(\"content-length\", content_length),
     ..headers
   ]
-  request_builder.build(client.builder, http.Post, \"\", headers, query, Some(body))
+  request_builder.build(
+    client.signer,
+    client.endpoint,
+    http.Post,
+    \"\",
+    headers,
+    query,
+    Some(body),
+  )
 }
 
 "

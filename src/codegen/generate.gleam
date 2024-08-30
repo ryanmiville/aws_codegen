@@ -199,18 +199,27 @@ const metadata = Metadata(
 )
 
 pub opaque type Client {
-  Client(builder: RequestBuilder)
+  Client(signer: Signer, endpoint: String)
 }
 
-pub fn new(config: Config) -> Client {
-  let endpoint = endpoint.from(config, metadata)
-  RequestBuilder(
-    config.access_key_id,
-    config.secret_access_key,
-    metadata.service_id,
-    endpoint,
-  )
-  |> Client
+pub fn new(
+  access_key_id access_key_id: String,
+  secret_access_key secret_access_key: String,
+  region region: String,
+) -> Client {
+  let signer =
+    aws4_request.signer(
+      access_key_id:,
+      secret_access_key:,
+      region:,
+      service: metadata.signing_name,
+    )
+  let #(signer, endpoint) = endpoint.resolve(signer, metadata)
+  Client(signer:, endpoint:)
+}
+
+pub fn with_custom_endpoint(client: Client, custom_endpoint: String) -> Client {
+  Client(..client, endpoint: custom_endpoint)
 }
 
 "

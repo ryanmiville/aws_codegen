@@ -18,10 +18,10 @@ fn get_operation(operation_name: ShapeId, spec: String) {
 }
 
 pub const imports = "
-import aws_request/config.{type Config}
+import aws4_request.{type Signer}
 import aws_request/internal/endpoint
 import aws_request/internal/metadata.{Metadata}
-import aws_request/internal/request_builder.{type RequestBuilder, RequestBuilder}
+import aws_request/internal/request_builder
 import gleam/http.{type Header}
 import gleam/http/request.{type Request}
 import gleam/option.{type Option}
@@ -37,7 +37,16 @@ pub fn FUNCTION_NAME(
 ) -> Request(BitArray) {
   PATH
   CONTENT_TYPE
-  request_builder.build(client.builder, METHOD, path, headers, query, BODY_OPTION)
+  request_builder.build(
+    client.signer,
+    client.endpoint,
+    METHOD,
+    path,
+    headers,
+    query,
+    BODY_OPTION,
+  )
+
 }
 
 "
